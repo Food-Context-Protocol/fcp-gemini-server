@@ -2,13 +2,17 @@
 """
 Generate lo-fi hip-hop soundtrack for the demo video.
 
-Three tracks:
-  - Ambient pad (intro/outro): warm chords, no drums, vinyl crackle
-  - Lo-fi beat (terminal demo): jazz chords, lazy drums, tape wobble
-  - Outro beat: resolving progression with drum fadeout
+Theme-aware: each FCP scenario gets a unique musical identity
+(different chord progressions, BPMs, foley mixes) while sharing
+the same lo-fi synth engine.
 
 Tries Lyria RealTime first, falls back to programmatic synth.
 Requires GOOGLE_API_KEY for Lyria.
+
+Usage:
+    python generate_lofi_music.py --synth-only
+    python generate_lofi_music.py --synth-only --theme allergen_alert
+    python generate_lofi_music.py --list-themes
 """
 
 import asyncio
@@ -108,6 +112,14 @@ def stir_at(t):
     return noise_val() * abs(cycle) * 0.012
 
 
+def data_tick_at(t, hit_time):
+    """Soft digital click — for tech-themed scenarios (mcp_toolbox, etc)."""
+    dt = t - hit_time
+    if dt < 0 or dt > 0.03:
+        return 0.0
+    return sine(2200, dt) * math.exp(-dt * 120) * 0.04
+
+
 def save_wav(filename: str, samples: list[float]):
     path = output_dir / filename
     with wave.open(str(path), "wb") as wf:
@@ -171,18 +183,149 @@ def try_lyria(prompt: str, output_path: str, duration: float) -> bool:
         return False
 
 
-# ─── Lo-Fi Generators ────────────────────────────────────────
+# ─── Music Themes ─────────────────────────────────────────────
+# Each scenario gets its own musical personality.
+# Foley weights control how much kitchen ambiance vs tech sounds.
 
-def gen_lofi_ambient(duration: float) -> list[float]:
+MUSIC_THEMES = {
+    "recipe_quest": {
+        "bpm": 75,
+        "chords": [
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+            [220.0, 261.6, 329.6, 392.0],  # Am7
+            [293.7, 349.2, 440.0, 523.3],  # Dm7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+        ],
+        "resolve_chords": [
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [164.8, 196.0, 246.9, 293.7],  # Em7
+            [220.0, 261.6, 329.6, 392.0],  # Am7
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+        ],
+        "pad_freqs": [130.8, 164.8, 196.0, 246.9],  # Cmaj7 voicing
+        "sub_bass": 55,
+        "foley": {"sizzle": 0.8, "chop": 1.0, "clink": 0.5, "stir": 1.0, "tick": 0.0},
+        "lyria_hint": "cozy kitchen, warm cooking vibes",
+    },
+    "food_scanner": {
+        "bpm": 72,
+        "chords": [
+            [220.0, 277.2, 329.6, 415.3],  # Amaj7
+            [246.9, 293.7, 370.0, 440.0],  # Bm7
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [196.0, 246.9, 293.7, 392.0],  # G7
+        ],
+        "resolve_chords": [
+            [293.7, 349.2, 440.0, 523.3],  # Dm7
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [220.0, 277.2, 329.6, 415.3],  # Amaj7
+        ],
+        "pad_freqs": [110.0, 138.6, 164.8, 207.7],  # Amaj7 low voicing
+        "sub_bass": 55,
+        "foley": {"sizzle": 0.4, "chop": 0.3, "clink": 0.8, "stir": 0.3, "tick": 0.4},
+        "lyria_hint": "candlelight dinner, warm amber glow",
+    },
+    "meal_log": {
+        "bpm": 68,
+        "chords": [
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+            [164.8, 196.0, 246.9, 293.7],  # Em7
+        ],
+        "resolve_chords": [
+            [220.0, 261.6, 329.6, 392.0],  # Am7
+            [293.7, 349.2, 440.0, 523.3],  # Dm7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+        ],
+        "pad_freqs": [130.8, 164.8, 196.0, 246.9],
+        "sub_bass": 65,
+        "foley": {"sizzle": 0.5, "chop": 0.6, "clink": 0.7, "stir": 0.5, "tick": 0.0},
+        "lyria_hint": "morning routine, sunrise warmth, gentle",
+    },
+    "allergen_alert": {
+        "bpm": 80,
+        "chords": [
+            [220.0, 261.6, 329.6, 392.0],  # Am7
+            [164.8, 196.0, 246.9, 293.7],  # Em7
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+        ],
+        "resolve_chords": [
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+            [220.0, 261.6, 329.6, 392.0],  # Am7
+        ],
+        "pad_freqs": [110.0, 130.8, 164.8, 196.0],  # Am voicing
+        "sub_bass": 55,
+        "foley": {"sizzle": 0.3, "chop": 0.2, "clink": 0.6, "stir": 0.2, "tick": 0.6},
+        "lyria_hint": "alert but calm, cool blue, careful",
+    },
+    "mcp_toolbox": {
+        "bpm": 78,
+        "chords": [
+            [164.8, 196.0, 246.9, 293.7],  # Em7
+            [220.0, 261.6, 329.6, 392.0],  # Am7
+            [293.7, 349.2, 440.0, 523.3],  # Dm7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+        ],
+        "resolve_chords": [
+            [293.7, 349.2, 440.0, 523.3],  # Dm7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+            [164.8, 196.0, 246.9, 293.7],  # Em7
+        ],
+        "pad_freqs": [82.4, 103.8, 123.5, 146.8],  # Em low voicing
+        "sub_bass": 41,
+        "foley": {"sizzle": 0.2, "chop": 0.1, "clink": 0.4, "stir": 0.1, "tick": 1.0},
+        "lyria_hint": "deep cosmic, technical, digital vibes",
+    },
+    "gemini_brain": {
+        "bpm": 70,
+        "chords": [
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+            [220.0, 277.2, 329.6, 415.3],  # Amaj7
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [196.0, 246.9, 293.7, 392.0],  # G7
+        ],
+        "resolve_chords": [
+            [220.0, 261.6, 329.6, 392.0],  # Am7
+            [174.6, 220.0, 261.6, 329.6],  # Fmaj7
+            [196.0, 246.9, 293.7, 349.2],  # G7
+            [261.6, 329.6, 392.0, 493.9],  # Cmaj7
+        ],
+        "pad_freqs": [130.8, 164.8, 196.0, 246.9],
+        "sub_bass": 65,
+        "foley": {"sizzle": 0.3, "chop": 0.2, "clink": 0.5, "stir": 0.3, "tick": 0.5},
+        "lyria_hint": "ethereal AI, golden mystique, dreamy",
+    },
+}
+
+DEFAULT_MUSIC_THEME = "recipe_quest"
+
+
+def get_music_theme(name: str = None) -> dict:
+    if name and name in MUSIC_THEMES:
+        return MUSIC_THEMES[name]
+    return MUSIC_THEMES[DEFAULT_MUSIC_THEME]
+
+
+# ─── Theme-Aware Generators ──────────────────────────────────
+
+def gen_lofi_ambient(duration: float, theme_name: str = None) -> list[float]:
     """Warm ambient pad — no drums, just chords + vinyl crackle + kitchen sizzle.
 
-    Used for intro and outro backgrounds.
+    Used for intro and outro backgrounds. Adapts pad freqs and foley from theme.
     """
+    mt = get_music_theme(theme_name)
     n = int(SAMPLE_RATE * duration)
     samples = []
 
-    # Cmaj7 voicing: C3 E3 G3 B3
-    pad_freqs = [130.8, 164.8, 196.0, 246.9]
+    pad_freqs = mt["pad_freqs"]
+    foley = mt["foley"]
 
     for i in range(n):
         t = i / SAMPLE_RATE
@@ -200,7 +343,7 @@ def gen_lofi_ambient(duration: float) -> list[float]:
         s *= 0.5 + 0.5 * lfo(0.08, t)
 
         # Sub bass drone
-        s += sine(55, t) * 0.10 * (0.7 + 0.3 * lfo(0.15, t))
+        s += sine(mt["sub_bass"], t) * 0.10 * (0.7 + 0.3 * lfo(0.15, t))
 
         # Vinyl crackle — sparse pops
         if random.random() < 0.008:
@@ -208,30 +351,26 @@ def gen_lofi_ambient(duration: float) -> list[float]:
         # Continuous low hiss
         s += noise_val() * 0.006
 
-        # Kitchen ambiance — faint sizzle
-        s += sizzle_at(t, intensity=0.6)
+        # Kitchen ambiance — faint sizzle (scaled by theme)
+        s += sizzle_at(t, intensity=0.6 * foley.get("sizzle", 0.5))
 
         samples.append(s * fade)
 
     return samples
 
 
-def gen_lofi_beat(duration: float, bpm: int = 75) -> list[float]:
-    """Lo-fi hip-hop beat with jazz chords, lazy drums, vinyl crackle, kitchen foley.
+def gen_themed_beat(duration: float, theme_name: str = None) -> list[float]:
+    """Lo-fi hip-hop beat with theme-specific chords, tempo, and foley mix.
 
     Plays continuously under the terminal demo section.
     """
+    mt = get_music_theme(theme_name)
+    bpm = mt["bpm"]
+    chords = mt["chords"]
+    foley = mt["foley"]
     n = int(SAMPLE_RATE * duration)
     beat = 60.0 / bpm
     samples = []
-
-    # Jazz chord progression: Cmaj7 -> Am7 -> Dm7 -> G7 (2 bars each)
-    chord_freqs = [
-        [261.6, 329.6, 392.0, 493.9],  # Cmaj7
-        [220.0, 261.6, 329.6, 392.0],  # Am7
-        [293.7, 349.2, 440.0, 523.3],  # Dm7
-        [196.0, 246.9, 293.7, 349.2],  # G7
-    ]
 
     for i in range(n):
         t = i / SAMPLE_RATE
@@ -239,8 +378,8 @@ def gen_lofi_beat(duration: float, bpm: int = 75) -> list[float]:
 
         # Select chord (changes every 2 bars = 8 beats)
         bar = int(t / (beat * 4))
-        chord_idx = bar % len(chord_freqs)
-        chord = chord_freqs[chord_idx]
+        chord_idx = bar % len(chords)
+        chord = chords[chord_idx]
         bar_pos = t % (beat * 4)
 
         s = 0.0
@@ -283,47 +422,54 @@ def gen_lofi_beat(duration: float, bpm: int = 75) -> list[float]:
             s += noise_val() * 0.04
         s += noise_val() * 0.008
 
-        # ─── Kitchen foley (food ambiance) ────────────────
-        s += sizzle_at(t, intensity=0.8)
+        # ─── Foley (theme-weighted) ──────────────────────
+        s += sizzle_at(t, intensity=foley.get("sizzle", 0.5))
+
         bar_in_progression = bar % 2
-        if bar_in_progression == 0:
+        chop_weight = foley.get("chop", 0.5)
+        if chop_weight > 0 and bar_in_progression == 0:
             chop_beat_time = (t // (beat * 4)) * (beat * 4) + beat
-            s += chop_at(t, chop_beat_time)
-            s += chop_at(t, chop_beat_time + beat * 0.5)
-        if bar % 8 == 4:
+            s += chop_at(t, chop_beat_time) * chop_weight
+            s += chop_at(t, chop_beat_time + beat * 0.5) * chop_weight
+
+        clink_weight = foley.get("clink", 0.5)
+        if clink_weight > 0 and bar % 8 == 4:
             clink_time = (t // (beat * 4 * 8)) * (beat * 4 * 8) + beat * 4 * 4
-            s += plate_clink_at(t, clink_time)
-        s += stir_at(t)
+            s += plate_clink_at(t, clink_time) * clink_weight
+
+        s += stir_at(t) * foley.get("stir", 0.5)
+
+        # Data tick for tech themes
+        tick_weight = foley.get("tick", 0.0)
+        if tick_weight > 0 and bar_in_progression == 1:
+            tick_time = (t // (beat * 2)) * (beat * 2) + beat * 1.5
+            s += data_tick_at(t, tick_time) * tick_weight
 
         samples.append(s * fade * 0.85)
 
     return samples
 
 
-def gen_lofi_outro(duration: float, bpm: int = 75) -> list[float]:
-    """Resolving lo-fi outro — drums fade out, chords resolve, kitchen fades.
+def gen_themed_outro(duration: float, theme_name: str = None) -> list[float]:
+    """Resolving lo-fi outro — drums fade out, chords resolve, foley fades.
 
-    Uses resolution progression: Fmaj7 -> Em7 -> Am7 -> Cmaj7
+    Uses theme-specific resolution chord progression.
     """
+    mt = get_music_theme(theme_name)
+    bpm = mt["bpm"]
+    chords = mt["resolve_chords"]
+    foley = mt["foley"]
     n = int(SAMPLE_RATE * duration)
     beat = 60.0 / bpm
     samples = []
-
-    # Resolution progression
-    chord_freqs = [
-        [174.6, 220.0, 261.6, 329.6],  # Fmaj7
-        [164.8, 196.0, 246.9, 293.7],  # Em7
-        [220.0, 261.6, 329.6, 392.0],  # Am7
-        [261.6, 329.6, 392.0, 493.9],  # Cmaj7 (home)
-    ]
 
     for i in range(n):
         t = i / SAMPLE_RATE
         fade = env_fade(t, duration, 0.5, 3.0)
 
         bar = int(t / (beat * 4))
-        chord_idx = bar % len(chord_freqs)
-        chord = chord_freqs[chord_idx]
+        chord_idx = bar % len(chords)
+        chord = chords[chord_idx]
         bar_pos = t % (beat * 4)
 
         s = 0.0
@@ -361,50 +507,71 @@ def gen_lofi_outro(duration: float, bpm: int = 75) -> list[float]:
         s += noise_val() * 0.007
 
         # Kitchen foley — fading out with drums
-        s += sizzle_at(t, intensity=0.6 * drum_fade)
-        s += stir_at(t) * drum_fade
+        s += sizzle_at(t, intensity=foley.get("sizzle", 0.5) * drum_fade)
+        s += stir_at(t) * foley.get("stir", 0.5) * drum_fade
         final_clink_time = duration - 2.5
-        s += plate_clink_at(t, final_clink_time) * 1.5
+        s += plate_clink_at(t, final_clink_time) * foley.get("clink", 0.5) * 1.5
 
         samples.append(s * fade * 0.85)
 
     return samples
 
 
-# ─── Track Definitions ────────────────────────────────────────
+# ─── Track Builder ────────────────────────────────────────────
 
-TRACKS = {
-    "lofi_intro": {
-        "lyria_prompt": "lo-fi ambient pad, warm jazzy chords, vinyl crackle, kitchen ambiance, gentle sizzle, no drums, mellow, chill cooking vibes, tape hiss",
-        "duration": 8.0,
-        "synth_fn": lambda: gen_lofi_ambient(8.0),
-    },
-    "lofi_recipe_quest": {
-        "lyria_prompt": "lo-fi hip hop beat, 75bpm, jazzy piano chords, warm sub bass, vinyl crackle, kitchen sounds, chopping rhythm, chill cooking music, mellow lazy drums, tape wobble",
-        "duration": 65.0,
-        "synth_fn": lambda: gen_lofi_beat(65.0, 75),
-    },
-    "lofi_outro": {
-        "lyria_prompt": "lo-fi hip hop outro, 75bpm, resolving warm jazz chords, drums fading out, kitchen ambiance fading, vinyl crackle, peaceful ending, tape hiss",
-        "duration": 12.0,
-        "synth_fn": lambda: gen_lofi_outro(12.0, 75),
-    },
-}
+def build_tracks(theme_name: str = None, demo_duration: float = 65.0) -> dict:
+    """Build track definitions for a given theme."""
+    mt = get_music_theme(theme_name)
+    hint = mt.get("lyria_hint", "chill lo-fi")
+
+    return {
+        "lofi_intro": {
+            "lyria_prompt": f"lo-fi ambient pad, warm jazzy chords, vinyl crackle, {hint}, no drums, mellow, tape hiss",
+            "duration": 8.0,
+            "synth_fn": lambda: gen_lofi_ambient(8.0, theme_name),
+        },
+        "lofi_recipe_quest": {
+            "lyria_prompt": f"lo-fi hip hop beat, {mt['bpm']}bpm, jazzy chords, warm sub bass, vinyl crackle, {hint}, mellow lazy drums, tape wobble",
+            "duration": demo_duration,
+            "synth_fn": lambda: gen_themed_beat(demo_duration, theme_name),
+        },
+        "lofi_outro": {
+            "lyria_prompt": f"lo-fi hip hop outro, {mt['bpm']}bpm, resolving warm jazz chords, drums fading out, {hint}, vinyl crackle, peaceful ending",
+            "duration": 12.0,
+            "synth_fn": lambda: gen_themed_outro(12.0, theme_name),
+        },
+    }
 
 
 # ─── Main ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     use_lyria = "--synth-only" not in sys.argv
-    lyria_available = None
 
-    print("\nGenerating lo-fi soundtrack...")
+    # Parse theme
+    theme_name = None
+    for i, a in enumerate(sys.argv[1:]):
+        if a == "--theme" and i + 2 < len(sys.argv):
+            theme_name = sys.argv[i + 2]
+        if a == "--list-themes":
+            print("Available music themes:")
+            for key, mt in MUSIC_THEMES.items():
+                marker = " (default)" if key == DEFAULT_MUSIC_THEME else ""
+                print(f"  {key:20s} — {mt['bpm']}bpm, {mt['lyria_hint']}{marker}")
+            sys.exit(0)
+
+    lyria_available = None
+    tracks = build_tracks(theme_name)
+    mt = get_music_theme(theme_name)
+
+    print(f"\nGenerating lo-fi soundtrack [{theme_name or DEFAULT_MUSIC_THEME}]")
+    print(f"  BPM: {mt['bpm']}, Foley: {mt['foley']}")
     if use_lyria:
         print("  Attempting Lyria RealTime (falls back to synth)\n")
     else:
         print("  Synth-only mode\n")
 
-    for name, track in TRACKS.items():
+    for name, track in tracks.items():
         filename = f"{name}.wav"
         filepath = str(output_dir / filename)
         print(f"  [{name}] ({track['duration']}s)")
