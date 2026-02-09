@@ -524,11 +524,14 @@ def build_tracks(theme_name: str = None, demo_duration: float = 65.0) -> dict:
     mt = get_music_theme(theme_name)
     hint = mt.get("lyria_hint", "chill lo-fi")
 
+    intro_dur = min(8.0, demo_duration)
+    outro_dur = min(12.0, demo_duration)
+
     return {
         "lofi_intro": {
             "lyria_prompt": f"lo-fi ambient pad, warm jazzy chords, vinyl crackle, {hint}, no drums, mellow, tape hiss",
-            "duration": 8.0,
-            "synth_fn": lambda: gen_lofi_ambient(8.0, theme_name),
+            "duration": intro_dur,
+            "synth_fn": lambda: gen_lofi_ambient(intro_dur, theme_name),
         },
         "lofi_recipe_quest": {
             "lyria_prompt": f"lo-fi hip hop beat, {mt['bpm']}bpm, jazzy chords, warm sub bass, vinyl crackle, {hint}, mellow lazy drums, tape wobble",
@@ -537,8 +540,8 @@ def build_tracks(theme_name: str = None, demo_duration: float = 65.0) -> dict:
         },
         "lofi_outro": {
             "lyria_prompt": f"lo-fi hip hop outro, {mt['bpm']}bpm, resolving warm jazz chords, drums fading out, {hint}, vinyl crackle, peaceful ending",
-            "duration": 12.0,
-            "synth_fn": lambda: gen_themed_outro(12.0, theme_name),
+            "duration": outro_dur,
+            "synth_fn": lambda: gen_themed_outro(outro_dur, theme_name),
         },
     }
 
