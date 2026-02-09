@@ -3,6 +3,7 @@
 Covers timeline structure, asset checking, audio mixing, and concat logic.
 """
 
+import shutil
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -68,6 +69,7 @@ class TestResolvePath:
 
 
 class TestCheckAssets:
+    @pytest.mark.skipif(shutil.which("ffprobe") is None, reason="ffprobe not installed")
     def test_reports_missing_files(self, capsys):
         """All video files should be missing in test env (no recordings)."""
         # Reset TIMELINE video paths to relative (check_assets resolves them)
