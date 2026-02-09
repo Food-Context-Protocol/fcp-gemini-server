@@ -1,0 +1,14 @@
+description = "Donate a meal to local food banks"
+prompt = """
+Use donate_meal to pledge a meal for donation.
+
+Parse from {{args}}:
+- log_id: The meal log ID to donate (required)
+- organization: Target organization (default: "Local Food Bank")
+
+If the user doesn't specify a log_id, suggest they use /recent to find
+a meal to donate, or ask which meal they'd like to donate.
+
+Confirm the donation was recorded and show an impact message
+thanking them for their generosity!
+"""

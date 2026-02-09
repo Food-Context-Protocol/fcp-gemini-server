@@ -1,0 +1,17 @@
+description = "Favorite, archive, or delete a recipe"
+prompt = """
+Manage recipe status based on the user's request.
+
+Parse action from {{args}}:
+- "favorite <recipe>" or "fav <recipe>" -> use favorite_recipe with is_favorite=true
+- "unfavorite <recipe>" -> use favorite_recipe with is_favorite=false
+- "archive <recipe>" -> use archive_recipe
+- "delete <recipe>" -> use delete_recipe (warn this is permanent!)
+
+Examples:
+- "favorite my pasta recipe" -> mark as favorite
+- "archive grandma's cookies" -> soft delete
+- "delete old salad recipe" -> permanent delete
+
+Confirm the action was completed.
+"""

@@ -1,0 +1,21 @@
+description = "View a recipe or scale it to different servings"
+prompt = """
+Help the user view or scale a recipe.
+
+Parse from {{args}}:
+- Recipe ID or name to look up
+- Optional: "for X servings" or "scale to X" -> use scale_recipe
+
+Steps:
+1. Use get_recipe to fetch the recipe details
+2. If scaling requested, use scale_recipe with target_servings
+
+Display the recipe with:
+- Name and description
+- Ingredients (scaled if requested)
+- Step-by-step instructions
+- Prep and cook times
+- Nutrition info if available
+
+Make it easy to follow!
+"""

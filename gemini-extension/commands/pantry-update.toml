@@ -1,0 +1,15 @@
+description = "Update a pantry item (quantity, expiration, etc.)"
+prompt = """
+Use update_pantry_item to modify an existing pantry item.
+
+Parse from {{args}}:
+- item_id: The item to update (may need to infer from name)
+- Updates like: quantity, unit, expiration_date, name
+
+Examples:
+- "set eggs to 12" -> update quantity
+- "milk expires tomorrow" -> update expiration_date
+- "rename chicken to chicken breast" -> update name
+
+Confirm the update was successful.
+"""

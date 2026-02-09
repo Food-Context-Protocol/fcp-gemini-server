@@ -1,0 +1,18 @@
+description = "Generate a dietitian report for a time period"
+prompt = """
+Use generate_dietitian_report to create a professional nutrition report.
+
+Parse from {{args}}:
+- start_date: Beginning of report period (e.g., "2024-01-01")
+- end_date: End of report period (e.g., "2024-01-31")
+- If user says "this week", "last month", etc., calculate appropriate dates
+
+Generate a comprehensive report including:
+- Calorie and macro trends
+- Nutrient intake analysis
+- Dietary pattern observations
+- Recommendations for improvement
+- Charts/data visualization suggestions
+
+This report is designed to be shared with healthcare providers.
+"""

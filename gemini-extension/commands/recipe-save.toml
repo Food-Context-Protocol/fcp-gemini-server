@@ -1,0 +1,19 @@
+description = "Save a new recipe to your collection"
+prompt = """
+Help the user save a new recipe.
+
+Parse recipe details from {{args}}:
+- name: Recipe name (required)
+- ingredients: List of ingredients (required)
+- instructions: Cooking steps
+- servings: Number of servings
+- prep_time_minutes, cook_time_minutes
+- cuisine: Type of cuisine
+- tags: Categories like "vegetarian", "quick", etc.
+- source: Where the recipe came from
+
+If the input is unstructured text, use standardize_recipe first to parse it,
+then use save_recipe to store it.
+
+Confirm the recipe was saved and show a summary!
+"""

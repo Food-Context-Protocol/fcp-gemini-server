@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+.tmp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Type checking
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+*.local
+
+# Logs
+*.log
+logs/
+
+# Firebase/GCP credentials (NEVER commit these)
+*-service-key.json
+*-credentials.json
+serviceAccountKey.json
+
+# Local data (SQLite DB, uploads)
+data/
+
+# Misc output files
+firepit-log.txt
+out.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.egg-info/
+.eggs/
+
+# Fern generated (if regenerating)
+# fern/.preview/
+sdks/
+
+# Coverage reports
+htmlcov/
+coverage.xml
+.coverage
+
+# Large video files (exceed GitHub 100MB limit)
+demo-video/recordings/*.mp4

@@ -1,0 +1,20 @@
+description = "Show statistics and insights from your food journal"
+prompt = """
+Gather comprehensive stats about the user's food journey.
+
+1. Use get_recent_meals with a larger limit (50) to get recent data
+2. Use get_taste_profile to get analyzed preferences
+
+Present interesting statistics:
+- Total meals logged (approximate from recent)
+- Most frequent cuisines
+- Favorite venues (most visited)
+- Average spice level
+- Unique dishes tried
+- Logging streak or frequency
+
+Make it fun and engaging - celebrate their food journey!
+Include any interesting patterns or achievements.
+
+Context from user: {{args}}
+"""

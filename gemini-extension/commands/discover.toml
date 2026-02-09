@@ -1,0 +1,15 @@
+description = "Discover new restaurants and dishes based on your taste profile"
+prompt = """
+Help the user discover new food experiences!
+
+1. First, use get_taste_profile to understand their preferences
+2. Then use get_meal_suggestions with context based on: {{args}}
+
+Based on their profile, suggest:
+- New cuisines they might enjoy (based on what they already like)
+- Dishes they haven't tried but would probably love
+- Types of restaurants that match their dining style
+
+If they provided location context, factor that in.
+Make it feel like a personalized food adventure!
+"""

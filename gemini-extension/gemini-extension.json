@@ -1,0 +1,46 @@
+{
+  "name": "fcp",
+  "version": "1.0.0",
+  "description": "FCP - AI-powered food journaling with taste profiles, meal discovery, and nutrition analytics",
+  "mcpServers": {
+    "fcp-server": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "fcp.server", "--mcp"],
+      "cwd": "${extensionPath}/../../..",
+      "env": {
+        "FCP_TOKEN": "${FCP_TOKEN}",
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
+        "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}",
+        "FCP_DEV_MODE": "true"
+      }
+    }
+  },
+  "contextFileName": "GEMINI.md",
+  "settings": [
+    {
+      "name": "FCP Token",
+      "description": "Your FCP authentication token (format: user_id:token)",
+      "envVar": "FCP_TOKEN",
+      "sensitive": true
+    },
+    {
+      "name": "Gemini API Key",
+      "description": "Google Gemini API key for AI features",
+      "envVar": "GEMINI_API_KEY",
+      "sensitive": true
+    },
+    {
+      "name": "Google Maps API Key",
+      "description": "API key for Google Maps (Places/Geocoding)",
+      "envVar": "GOOGLE_MAPS_API_KEY",
+      "sensitive": true
+    },
+    {
+      "name": "Firebase Credentials",
+      "description": "Path to your Google Application Credentials JSON file",
+      "envVar": "GOOGLE_APPLICATION_CREDENTIALS",
+      "sensitive": false
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+description = "Parse a restaurant menu image"
+prompt = """
+Use parse_menu to extract items from a restaurant menu image.
+
+Parse from {{args}}:
+- image_url: URL or path to the menu image (required)
+- restaurant_name: Name of the restaurant (optional, helps with context)
+
+Extract and organize:
+- Menu sections (appetizers, mains, desserts, etc.)
+- Item names and descriptions
+- Prices
+- Dietary indicators (V, VG, GF, etc.)
+
+Present the parsed menu in a clean, organized format.
+Suggest items that match the user's dietary preferences if known.
+"""

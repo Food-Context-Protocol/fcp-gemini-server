@@ -1,0 +1,13 @@
+description = "Add items to your pantry inventory"
+prompt = """
+Use add_to_pantry to add items to the user's pantry.
+
+Parse the input to extract a list of items: {{args}}
+
+Examples of parsing:
+- "eggs, milk, bread" -> ["eggs", "milk", "bread"]
+- "2 lbs chicken, onions, garlic" -> ["chicken", "onions", "garlic"]
+- "bought tomatoes and cheese" -> ["tomatoes", "cheese"]
+
+After adding, confirm what was added and suggest any recipes they could now make!
+"""

@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+env
+*.egg-info
+.eggs
+dist
+build
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+coverage.xml
+.tox
+.nox
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Development
+.devcontainer
+.pre-commit-config.yaml
+Makefile
+logs
+*.log
+
+# Misc
+.DS_Store
+Thumbs.db
+*.tmp
+.env.local
+.env.*.local
+
+# SDKs (generated separately)
+sdks
+
+# Fern config (not needed at runtime)
+fern
+openapi.json

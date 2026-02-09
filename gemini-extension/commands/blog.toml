@@ -1,0 +1,16 @@
+description = "Generate a blog post about meals or recipes"
+prompt = """
+Use generate_blog_post to create a longer-form blog post.
+
+Parse from {{args}}:
+- log_ids: List of meal log IDs to feature (optional)
+- topic: Blog topic like "weekly meals", "recipe review", "nutrition journey"
+- style: Writing style - "personal", "informative", "tutorial" (default: "personal")
+
+Generate a well-structured blog post with:
+- Engaging title
+- Introduction paragraph
+- Main content sections
+- Conclusion with call-to-action
+- SEO-friendly formatting suggestions
+"""

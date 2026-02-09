@@ -1,0 +1,15 @@
+description = "Analyze your food preferences and eating patterns"
+prompt = """
+Use the get_taste_profile tool to analyze the user's food preferences.
+
+Period to analyze: {{args}} (default to "all_time" if not specified)
+
+Present the taste profile in an engaging way:
+- Top cuisines with enthusiasm
+- Spice tolerance level
+- Favorite ingredients and dishes
+- Dining patterns (home vs restaurants, times)
+- Any interesting observations about their food journey
+
+Make it feel personal and insightful, not just a data dump.
+"""

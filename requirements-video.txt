@@ -1,0 +1,17 @@
+# Video Generation Requirements
+# For generating demo video with Gemini 3 APIs
+
+# Core Gemini APIs
+google-generativeai>=0.8.0
+google-cloud-texttospeech>=2.16.0
+
+# Video/Image Processing
+Pillow>=10.0.0
+ffmpeg-python>=0.2.0
+
+# CLI Interface
+rich>=13.0.0
+tenacity>=8.2.0
+
+# Data Handling
+pydantic>=2.0.0

@@ -1,0 +1,17 @@
+description = "Generate a social media post about a meal"
+prompt = """
+Use generate_social_post to create a shareable post about a meal.
+
+Parse from {{args}}:
+- log_id: The meal log ID to share (required)
+- platform: Target platform - "instagram", "twitter", "facebook" (default: "instagram")
+- tone: Post tone - "casual", "professional", "fun" (default: "casual")
+
+If no log_id is provided, suggest using /recent to find a meal to share.
+
+Generate an engaging post with:
+- Catchy caption
+- Relevant hashtags
+- Emoji suggestions
+- Photo tips if applicable
+"""

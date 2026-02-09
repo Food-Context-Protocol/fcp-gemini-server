@@ -1,0 +1,13 @@
+description = "Remove an item from your pantry"
+prompt = """
+Use delete_pantry_item to remove an item from the pantry.
+
+Parse the item to remove from: {{args}}
+
+The user might say:
+- "remove eggs" -> find and delete eggs
+- "finished the milk" -> delete milk
+- "used up all the chicken" -> delete chicken
+
+Confirm what was removed. If the item doesn't exist, let them know.
+"""

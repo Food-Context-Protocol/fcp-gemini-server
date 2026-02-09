@@ -1,0 +1,23 @@
+description = "Check dietary compatibility and flavor pairings"
+prompt = """
+Analyze foods for dietary compatibility and flavor pairings.
+
+Parse from {{args}}:
+- food_items: List of foods to check
+- diet_type: Dietary restriction to check against (optional)
+  Examples: "vegan", "keto", "gluten-free", "low-sodium"
+
+Use available tools:
+1. check_dietary_compatibility - Check if foods match dietary requirements
+2. get_flavor_pairings - Get complementary flavor suggestions
+
+Examples:
+- "check tofu for keto" -> dietary compatibility check
+- "what pairs with salmon" -> flavor pairing suggestions
+- "is this meal vegan: tofu, soy sauce, honey" -> check all items
+
+Present results clearly:
+- Compatible/incompatible status with reasons
+- Suggested alternatives for incompatible items
+- Flavor pairing recommendations
+"""

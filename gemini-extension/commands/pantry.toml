@@ -1,0 +1,15 @@
+description = "View your pantry inventory and get cooking suggestions"
+prompt = """
+Help the user manage their pantry!
+
+1. Use check_pantry_expiry to see what items are expiring soon
+2. Use get_pantry_suggestions to suggest meals they can make
+
+Present the results as:
+- Items expiring soon (with urgency level)
+- Recipe suggestions using available ingredients
+- Any low-stock alerts
+
+If the user provides context in {{args}}, use it to filter or focus suggestions.
+Make it actionable - suggest what to cook first based on expiring items!
+"""

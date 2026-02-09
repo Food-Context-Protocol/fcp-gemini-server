@@ -1,0 +1,11 @@
+description = "Show your recent meals from the food journal"
+prompt = """
+Use the get_recent_meals tool to show the user their recent food log entries.
+Display them in a nice format with:
+- Dish name
+- Venue/location
+- Date
+- Any notable ingredients or notes
+
+If the user specified a number in {{args}}, use that as the limit. Otherwise use 5.
+"""

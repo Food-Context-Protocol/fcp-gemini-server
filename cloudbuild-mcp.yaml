@@ -1,0 +1,33 @@
+steps:
+  # Run tests before building
+  - name: 'ghcr.io/astral-sh/uv:python3.13-bookworm-slim'
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - 'uv sync --frozen --no-install-project && uv run pytest tests/unit -q --tb=short'
+
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/fcp-mcp:latest', '-f', 'Dockerfile.mcp', '.']
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/fcp-mcp:latest']
+
+  # Replace PROJECT_ID placeholder in service-mcp.yaml
+  - name: 'ubuntu'
+    args: ['sed', '-i', 's/PROJECT_ID/$PROJECT_ID/g', 'service-mcp.yaml']
+
+  # Deploy configuration to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'replace'
+      - 'service-mcp.yaml'
+      - '--region'
+      - 'us-central1'
+
+images:
+  - 'gcr.io/$PROJECT_ID/fcp-mcp:latest'

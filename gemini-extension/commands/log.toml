@@ -1,0 +1,14 @@
+description = "Log a new meal to your food journal"
+prompt = """
+Use the add_meal tool to log a new meal.
+
+Parse the user's input to extract:
+- dish_name: The name of the dish (required)
+- venue: Restaurant or location if mentioned
+- notes: Any additional context or thoughts
+
+User's input: {{args}}
+
+After logging, confirm success and show what was recorded.
+If the input is ambiguous, ask for clarification.
+"""

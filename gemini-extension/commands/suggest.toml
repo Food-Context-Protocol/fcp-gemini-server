@@ -1,0 +1,16 @@
+description = "Get personalized meal suggestions based on your taste profile"
+prompt = """
+First use get_taste_profile to understand the user's preferences.
+Then use get_meal_suggestions with the context: {{args}}
+
+Present 3-5 meal suggestions that:
+- Match their cuisine preferences
+- Respect their spice tolerance
+- Avoid recent meals (don't repeat)
+- Fit the context/occasion
+
+For each suggestion include:
+- Why it matches their taste
+- Where they might find it (based on past venues if relevant)
+- Any tips or pairings
+"""

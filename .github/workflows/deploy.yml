@@ -1,0 +1,46 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual triggers
+
+env:
+  PROJECT_ID: gen-lang-client-0364405841
+  REGION: us-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          # Instructions: Replace these with your actual Pool/Provider/SA after setup
+          workload_identity_provider: 'projects/146487230485/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-deployer@gen-lang-client-0364405841.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and Deploy API
+        run: |
+          gcloud builds submit --config cloudbuild.yaml
+
+      - name: Build and Deploy MCP
+        run: |
+          gcloud builds submit --config cloudbuild-mcp.yaml
+
+      - name: Verify Deployment
+        run: |
+          curl -f https://api.fcp.dev/health
+          curl -f https://mcp.fcp.dev/health

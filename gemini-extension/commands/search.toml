@@ -1,0 +1,14 @@
+description = "Search your food journal with natural language"
+prompt = """
+Use the search_meals tool to search the user's food journal.
+
+The query is: {{args}}
+
+Display matching results with:
+- Dish name and venue
+- When it was logged
+- Why it matched (relevant notes/ingredients)
+- Any nutrition highlights if relevant
+
+If no results found, suggest alternative search terms.
+"""

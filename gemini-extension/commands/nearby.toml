@@ -1,0 +1,21 @@
+description = "Find restaurants and food nearby"
+prompt = """
+Use find_nearby_food to discover restaurants near the user.
+
+Parse location from: {{args}}
+- If coordinates are mentioned (lat/long), use latitude/longitude parameters
+- If a city or address is given, use the location parameter
+- If a food type is mentioned (pizza, sushi, etc.), set food_type parameter
+- Default food_type is "restaurant" unless specified otherwise
+
+Examples:
+- "pizza near downtown" -> food_type="pizza", location="downtown"
+- "sushi in San Francisco" -> food_type="sushi", location="San Francisco"
+- "restaurants" -> food_type="restaurant" (use user's default location)
+
+Show results with:
+- Restaurant name and rating
+- Distance from location
+- Cuisine type
+- Price range if available
+"""

@@ -1,0 +1,17 @@
+description = "List your saved recipes"
+prompt = """
+Use list_recipes to show the user's saved recipes.
+
+Parse options from {{args}}:
+- "favorites" or "fav" -> set favorites_only=true
+- "all" or "archived" -> set include_archived=true
+- A number like "10" -> set limit to that number
+
+Display recipes in a nice format:
+- Recipe name
+- Cuisine type (if available)
+- Favorite status (star or heart)
+- Prep/cook time if available
+
+If no recipes found, suggest they save some!
+"""

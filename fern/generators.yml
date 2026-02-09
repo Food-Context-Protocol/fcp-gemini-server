@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://schema.buildwithfern.dev/generators-yml.json
+api:
+  specs:
+    - openapi: ../openapi.json
+default-group: local
+groups:
+  local:
+    generators:
+      - name: fernapi/fern-typescript-sdk
+        version: 3.46.3
+        output:
+          location: local-file-system
+          path: ../sdks/typescript
+      - name: fernapi/fern-python-sdk
+        version: 4.3.13
+        output:
+          location: local-file-system
+          path: ../sdks/python
+        config:
+          package_name: fcp
+
+  # Docs are published separately with: fern generate --group docs
+  # docs:
+  #   generators:
+  #     - name: fernapi/fern-docs
+  #       version: latest
+  #       config:
+  #         title: Food Context Protocol
+  #         logo:
+  #           dark: ../static/logos/fcp-logo.png
+  #           light: ../static/logos/fcp-logo.png
+  #         navigation:
+  #           - section: Getting Started
+  #             contents:
+  #               - page: Overview
+  #                 path: ./docs/overview.md
+  #               - page: Quick Start
+  #                 path: ./docs/quickstart.md
+  #           - section: API Reference
+  #             api-section: true

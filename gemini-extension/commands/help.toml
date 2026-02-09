@@ -1,0 +1,59 @@
+description = "Show all FoodLog commands and how to use them"
+prompt = """
+Display a helpful guide to the FoodLog extension:
+
+# FoodLog Commands
+
+## View Your Food Journal
+- `/foodlog.recent [count]` - Show recent meals (default: 5)
+- `/foodlog.search <query>` - Search with natural language
+- `/foodlog.stats` - Show statistics and insights
+
+## Understand Your Taste
+- `/foodlog.profile [period]` - Analyze your preferences
+  - Periods: week, month, quarter, year, all_time
+
+## Get Recommendations
+- `/foodlog.suggest [context]` - Personalized meal ideas
+- `/foodlog.discover [context]` - Find new experiences
+- `/foodlog.nearby [location]` - Find restaurants nearby
+
+## Log Meals
+- `/foodlog.log <meal>` - Log what you ate
+  - Example: `/foodlog.log Pad Thai at Bangkok Garden - delicious!`
+
+## Pantry Management
+- `/foodlog.pantry` - View pantry inventory and get suggestions
+- `/foodlog.pantry-add <items>` - Add items to pantry
+- `/foodlog.pantry-update <item>` - Update a pantry item
+- `/foodlog.pantry-remove <item>` - Remove item from pantry
+
+## Recipe Management
+- `/foodlog.recipes [filter]` - List saved recipes (favorites, all)
+- `/foodlog.recipe <name>` - View or scale a recipe
+- `/foodlog.recipe-save <details>` - Save a new recipe
+- `/foodlog.recipe-fav <action>` - Favorite, archive, or delete recipes
+
+## Content Generation
+- `/foodlog.share <meal>` - Generate social media post
+- `/foodlog.blog [topic]` - Generate blog post
+- `/foodlog.report [period]` - Generate dietitian report
+
+## Image Processing
+- `/foodlog.scan-menu <image>` - Parse restaurant menu image
+- `/foodlog.scan-receipt <image>` - Parse grocery receipt
+
+## Analysis Tools
+- `/foodlog.check <foods>` - Check dietary compatibility and pairings
+
+## Giving Back
+- `/foodlog.donate <meal>` - Donate a meal to food banks
+
+## Tips
+- Search understands context: "that spicy ramen from last week"
+- Suggestions consider your recent meals to avoid repetition
+- Your taste profile learns from your food journey
+- Use pantry to track ingredients and get recipe suggestions
+
+Need help with something specific? Just ask!
+"""

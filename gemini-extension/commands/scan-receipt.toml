@@ -1,0 +1,19 @@
+description = "Parse a grocery receipt image"
+prompt = """
+Use parse_receipt to extract items from a grocery receipt.
+
+Parse from {{args}}:
+- image_url: URL or path to the receipt image (required)
+- store_name: Name of the store (optional)
+
+Extract and organize:
+- Purchased items with quantities
+- Prices per item
+- Total amount
+- Date of purchase
+
+After parsing, offer to:
+- Add items to pantry using add_to_pantry
+- Categorize items by type (produce, dairy, meat, etc.)
+- Track spending patterns
+"""
