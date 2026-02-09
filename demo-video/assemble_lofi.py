@@ -26,7 +26,7 @@ TIMELINE = [
         "audio_layers": [
             {"path": "music/lofi_intro.wav", "volume": 0.5},
         ],
-        "duration": 5,
+        "duration": 6,
     },
     {
         "id": "recipe_quest",
@@ -43,7 +43,7 @@ TIMELINE = [
         "audio_layers": [
             {"path": "music/lofi_outro.wav", "volume": 0.4},
         ],
-        "duration": 8,
+        "duration": 9,
     },
 ]
 

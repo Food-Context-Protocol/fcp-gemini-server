@@ -210,7 +210,7 @@ def main():
     if args.mcp:
         # Run MCP server
         asyncio.run(run_mcp_server())
-    elif args.http:
+    elif args.http:  # pragma: no branch
         # Run HTTP server via uvicorn
         import uvicorn
 

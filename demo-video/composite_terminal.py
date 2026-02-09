@@ -2,12 +2,15 @@
 """
 Composite a 1280x720 terminal recording into a 1920x1080 lo-fi frame.
 
-Generates a static background with gradient + border chrome + faint food emoji,
-then uses ffmpeg to overlay the terminal recording with grain and vignette.
+Generates a themed background with gradient + border chrome + food emoji in margins,
+then uses ffmpeg to overlay the terminal recording with subtle vignette.
+
+Supports different color themes per scenario via lofi_themes.py.
 
 Usage:
     python composite_terminal.py recordings/recipe_quest_raw.mp4
     python composite_terminal.py input.mp4 output.mp4
+    python composite_terminal.py input.mp4 output.mp4 --theme food_scanner
 """
 
 import subprocess
@@ -16,6 +19,8 @@ import random
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from lofi_themes import get_theme, EMOJI_VALID_SIZES, list_themes
+
 WIDTH = 1920
 HEIGHT = 1080
 TERM_W = 1280
@@ -23,17 +28,12 @@ TERM_H = 720
 TERM_X = (WIDTH - TERM_W) // 2   # 320
 TERM_Y = (HEIGHT - TERM_H) // 2  # 180
 
-LOFI = {
-    "bg_dark": (18, 14, 32),
-    "bg_gradient": (38, 30, 62),
-    "accent_warm": (255, 183, 120),
-    "accent_lavender": (180, 160, 220),
-    "text_secondary": (160, 150, 170),
-    "text_dim": (100, 90, 110),
-    "border_glow": (120, 90, 180),
+FOOD_EMOJI = {
+    "dishes": ["🍕", "🍣", "🌮", "🍜", "🍝", "🍲", "🥗", "🍱", "🫕", "🥘"],
+    "ingredients": ["🥑", "🧄", "🌶️", "🍅", "🧅", "🥕", "🫑", "🌽", "🍋"],
+    "kitchen": ["🔪", "🍳", "🥄", "🧂", "🫙"],
+    "sweet": ["🧁", "🍰", "🍩", "🧋", "☕"],
 }
-
-MARGIN_EMOJI = ["🍕", "🍣", "🌮", "🍜", "🥗", "🍳"]
 
 SCRIPT_DIR = Path(__file__).parent
 TEMP_DIR = SCRIPT_DIR / "assembly_tmp"
@@ -67,7 +67,10 @@ def get_font(name, size):
 
 
 def _get_emoji_font(size: int):
-    """Get Apple Color Emoji font for margin decorations."""
+    """Get Apple Color Emoji font for margin decorations.
+
+    IMPORTANT: Only sizes 20, 26, 32, 40, 48, 52, 64, 96, 160 are valid.
+    """
     apple_path = Path("/System/Library/Fonts/Apple Color Emoji.ttc")
     if apple_path.exists():
         try:
@@ -77,26 +80,25 @@ def _get_emoji_font(size: int):
     return None
 
 
-def generate_background(output_path: str):
+def generate_background(output_path: str, theme: dict):
     """Generate the static 1920x1080 lo-fi background with terminal chrome and margin emoji."""
-    img = Image.new("RGB", (WIDTH, HEIGHT), LOFI["bg_dark"])
+    img = Image.new("RGB", (WIDTH, HEIGHT), theme["bg_dark"])
     draw = ImageDraw.Draw(img)
 
     # Vertical gradient
     for y in range(HEIGHT):
         t = y / HEIGHT
-        r = int(lerp(LOFI["bg_dark"][0], LOFI["bg_gradient"][0], t))
-        g = int(lerp(LOFI["bg_dark"][1], LOFI["bg_gradient"][1], t))
-        b = int(lerp(LOFI["bg_dark"][2], LOFI["bg_gradient"][2], t))
+        r = int(lerp(theme["bg_dark"][0], theme["bg_gradient"][0], t))
+        g = int(lerp(theme["bg_dark"][1], theme["bg_gradient"][1], t))
+        b = int(lerp(theme["bg_dark"][2], theme["bg_gradient"][2], t))
         draw.line([(0, y), (WIDTH, y)], fill=(r, g, b))
 
-    # Terminal chrome: multiple glow layers (outer to inner)
+    # Terminal chrome: warm glow layers
     glow_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow_layer)
-    gr, gg, gb = LOFI["border_glow"]
+    gr, gg, gb = theme["border_glow"]
 
-    # Outer glow rings (decreasing alpha)
-    for offset, alpha in [(8, 8), (6, 15), (4, 25), (2, 40)]:
+    for offset, alpha in [(8, 10), (6, 18), (4, 30), (2, 45)]:
         glow_draw.rounded_rectangle(
             [
                 TERM_X - offset, TERM_Y - offset,
@@ -107,7 +109,6 @@ def generate_background(output_path: str):
             width=2,
         )
 
-    # Apply slight blur to glow
     glow_layer = glow_layer.filter(ImageFilter.GaussianBlur(radius=3))
     img.paste(glow_layer, (0, 0), glow_layer)
 
@@ -122,37 +123,47 @@ def generate_background(output_path: str):
     )
     img.paste(border_layer, (0, 0), border_layer)
 
-    # Faint food emoji in margin areas
-    emoji_font = _get_emoji_font(36)
+    # Food emoji in margins — crisp and visible (not ghostly)
+    emoji_font = _get_emoji_font(48)  # Valid Apple Color Emoji size
     if emoji_font:
         emoji_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
         emoji_draw = ImageDraw.Draw(emoji_layer)
 
+        # Build emoji pool from theme categories
+        pool = []
+        for cat in theme.get("emoji_categories", ["dishes"]):
+            pool.extend(FOOD_EMOJI.get(cat, []))
+
         # Positions in the margins (avoid terminal area)
         margin_positions = [
-            (80, 90),                          # top-left
-            (TERM_X + TERM_W + 40, 120),       # top-right margin
-            (100, HEIGHT - 80),                 # bottom-left
-            (TERM_X + TERM_W + 60, HEIGHT - 100),  # bottom-right margin
-            (50, HEIGHT // 2 - 30),             # left center
-            (TERM_X + TERM_W + 50, HEIGHT // 2 + 40),  # right center
+            (80, 80),
+            (TERM_X + TERM_W + 40, 100),
+            (100, HEIGHT - 90),
+            (TERM_X + TERM_W + 55, HEIGHT - 95),
+            (50, HEIGHT // 2 - 20),
+            (TERM_X + TERM_W + 45, HEIGHT // 2 + 30),
         ]
 
-        random.seed(42)  # Deterministic placement
+        random.seed(42)
+        used = set()
         for pos in margin_positions:
-            char = random.choice(MARGIN_EMOJI)
+            available = [c for c in pool if c not in used]
+            if not available:
+                available = pool
+            char = random.choice(available)
+            used.add(char)
             emoji_draw.text(pos, char, font=emoji_font, embedded_color=True)
 
-        # Heavy blur + low alpha for dreamy faintness
-        emoji_layer = emoji_layer.filter(ImageFilter.GaussianBlur(radius=4))
+        # Light blur + moderate alpha — visible but not distracting
+        emoji_layer = emoji_layer.filter(ImageFilter.GaussianBlur(radius=1))
         r_ch, g_ch, b_ch, a_ch = emoji_layer.split()
-        a_ch = a_ch.point(lambda p: int(p * 0.25))
+        a_ch = a_ch.point(lambda p: int(p * 0.45))
         emoji_layer = Image.merge("RGBA", (r_ch, g_ch, b_ch, a_ch))
         img.paste(emoji_layer, (0, 0), emoji_layer)
 
     # Watermark: "FCP" in bottom-right margin
     font_wm = get_font("mono", 18)
-    wr, wg, wb = LOFI["text_dim"]
+    wr, wg, wb = theme["text_dim"]
     draw = ImageDraw.Draw(img)
     draw.text(
         (TERM_X + TERM_W - 40, TERM_Y + TERM_H + 12),
@@ -161,12 +172,12 @@ def generate_background(output_path: str):
         font=font_wm,
     )
 
-    # Section label in top-left margin
+    # Scenario label in top-left margin
     font_label = get_font("body", 20)
-    lr, lg, lb = LOFI["text_dim"]
+    lr, lg, lb = theme["text_dim"]
     draw.text(
         (TERM_X, TERM_Y - 30),
-        "Recipe Quest",
+        theme.get("name", "Demo"),
         fill=(lr, lg, lb),
         font=font_label,
     )
@@ -189,16 +200,19 @@ def get_duration(path: str) -> float:
     return float(result.stdout.strip()) if result.returncode == 0 else 0.0
 
 
-def composite(input_recording: str, output_path: str, grain: bool = True):
+def composite(input_recording: str, output_path: str, theme: dict = None, grain: bool = False):
     """Composite the terminal recording into the lo-fi frame.
 
-    1. Generate static background PNG
-    2. Use ffmpeg filter_complex to overlay terminal + add grain + vignette
+    1. Generate themed background PNG
+    2. Use ffmpeg filter_complex to overlay terminal + vignette
     """
+    if theme is None:
+        theme = get_theme()
+
     TEMP_DIR.mkdir(exist_ok=True)
 
     bg_path = str(TEMP_DIR / "lofi_bg.png")
-    generate_background(bg_path)
+    generate_background(bg_path, theme)
 
     duration = get_duration(input_recording)
     print(f"  Recording duration: {duration:.1f}s")
@@ -216,12 +230,9 @@ def composite(input_recording: str, output_path: str, grain: bool = True):
     filter_parts.append("[comp]vignette=PI/6[vig]")
 
     if grain:
-        # Film grain via noise filter
-        filter_parts.append("[vig]noise=alls=8:allf=t+u[out]")
+        filter_parts.append("[vig]noise=alls=5:allf=t+u[out]")
         final_label = "[out]"
     else:
-        final_label = "[vig]"
-        # Rename for mapping
         filter_parts[-1] = "[comp]vignette=PI/6[out]"
         final_label = "[out]"
 
@@ -229,11 +240,11 @@ def composite(input_recording: str, output_path: str, grain: bool = True):
 
     cmd = [
         "ffmpeg", "-y",
-        "-loop", "1", "-i", bg_path,       # Input 0: background (looped still)
-        "-i", input_recording,               # Input 1: terminal recording
+        "-loop", "1", "-i", bg_path,
+        "-i", input_recording,
         "-filter_complex", filter_complex,
         "-map", final_label,
-        "-map", "1:a?",                      # Pass through audio if present
+        "-map", "1:a?",
         "-c:v", "libx264", "-preset", "medium", "-crf", "18",
         "-pix_fmt", "yuv420p",
         "-t", str(duration),
@@ -256,18 +267,34 @@ def composite(input_recording: str, output_path: str, grain: bool = True):
 
 
 if __name__ == "__main__":
+    # Parse args
+    theme_name = None
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    for i, a in enumerate(sys.argv[1:]):
+        if a == "--theme" and i + 2 < len(sys.argv):
+            theme_name = sys.argv[i + 2]
+        if a == "--list-themes":
+            print("Available themes:")
+            list_themes()
+            sys.exit(0)
+
+    theme = get_theme(theme_name)
+
     default_input = str(SCRIPT_DIR / "recordings" / "recipe_quest_raw.mp4")
     default_output = str(SCRIPT_DIR / "recordings" / "recipe_quest_composited.mp4")
-    input_file = sys.argv[1] if len(sys.argv) > 1 else default_input
-    output_file = sys.argv[2] if len(sys.argv) > 2 else default_output
+    input_file = args[0] if len(args) > 0 else default_input
+    output_file = args[1] if len(args) > 1 else default_output
 
     if not Path(input_file).exists():
         print(f"Input not found: {input_file}")
         print("\nRecord your terminal at 1280x720, then:")
         print(f"  python composite_terminal.py {input_file}")
+        print(f"\nAvailable themes (--theme <name>):")
+        list_themes()
         sys.exit(1)
 
     print(f"\nCompositing terminal recording")
     print(f"  Input:  {input_file}")
     print(f"  Output: {output_file}")
-    composite(input_file, output_file)
+    print(f"  Theme:  {theme['name']} — {theme['description']}")
+    composite(input_file, output_file, theme=theme)

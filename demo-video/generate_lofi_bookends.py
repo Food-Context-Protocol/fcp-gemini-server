@@ -7,6 +7,7 @@ Outro (9s): Same cozy style + CTA text + fade to black + lo-fi music
 
 The food emoji are the star — large, colorful, clearly visible, gently floating.
 Uses Apple Color Emoji (only color emoji renderer that works with Pillow on macOS).
+Apple Color Emoji only supports specific pixel sizes: 20, 26, 32, 40, 48, 52, 64, 96, 160.
 """
 
 import subprocess
@@ -23,6 +24,9 @@ console = Console()
 WIDTH = 1920
 HEIGHT = 1080
 FPS = 30
+
+# Apple Color Emoji only supports these exact pixel sizes
+EMOJI_VALID_SIZES = [48, 64, 96, 160]
 
 # ─── Warm Lo-fi Color Palette ────────────────────────────────
 
@@ -115,11 +119,13 @@ def _get_emoji_font(size: int):
 class FloatingFoodEmoji:
     """Large, colorful floating food emoji — the visual centerpiece.
 
-    Clearly visible with no heavy blur. These are recognizable food icons
-    gently drifting upward like aromas from a warm kitchen.
+    6-9 emoji well-spaced across the screen (min 250px apart).
+    Uses only valid Apple Color Emoji sizes: 48, 64, 96, 160.
     """
 
-    def __init__(self, num_emoji=40, categories=None):
+    MIN_DIST = 250  # minimum pixels between emoji centers
+
+    def __init__(self, num_emoji=8, categories=None):
         if categories is None:
             categories = ["dishes", "ingredients"]
         self.pool = []
@@ -129,32 +135,60 @@ class FloatingFoodEmoji:
             self.pool = FOOD_EMOJI["dishes"]
         self.emoji_list = []
         self.font_cache = {}
-        for _ in range(num_emoji):
-            self.emoji_list.append(self._new_emoji(random_y=True))
+        # Pick unique emoji — no repeats
+        unique_chars = random.sample(self.pool, min(num_emoji, len(self.pool)))
+        for char in unique_chars:
+            self.emoji_list.append(self._new_emoji_spaced(random_y=True, char=char))
 
     def _get_font(self, size: int):
         if size not in self.font_cache:
             self.font_cache[size] = _get_emoji_font(size)
         return self.font_cache[size]
 
-    def _new_emoji(self, random_y=False):
+    def _far_enough(self, x, y, others):
+        """Check that (x,y) is at least MIN_DIST from all others."""
+        for o in others:
+            dx = x - o["x"]
+            dy = y - o["y"]
+            if math.sqrt(dx * dx + dy * dy) < self.MIN_DIST:
+                return False
+        return True
+
+    def _used_chars(self):
+        return {e["char"] for e in self.emoji_list}
+
+    def _pick_unique_char(self):
+        """Pick an emoji not currently on screen."""
+        used = self._used_chars()
+        available = [c for c in self.pool if c not in used]
+        if not available:
+            available = self.pool
+        return random.choice(available)
+
+    def _new_emoji_spaced(self, random_y=False, char=None):
+        """Create emoji with spacing enforcement (tries up to 80 times)."""
+        for _ in range(80):
+            x = random.uniform(100, WIDTH - 100)
+            y = random.uniform(100, HEIGHT - 100) if random_y else HEIGHT + random.uniform(20, 80)
+            if self._far_enough(x, y, self.emoji_list):
+                break
         return {
-            "char": random.choice(self.pool),
-            "x": random.uniform(30, WIDTH - 30),
-            "y": random.uniform(30, HEIGHT - 30) if random_y else HEIGHT + random.uniform(20, 80),
-            "size": random.randint(72, 109),
-            "speed_y": random.uniform(-10, -25),
+            "char": char or self._pick_unique_char(),
+            "x": x,
+            "y": y,
+            "size": random.choice(EMOJI_VALID_SIZES),
+            "speed_y": random.uniform(-8, -18),
             "drift_offset": random.uniform(0, math.pi * 2),
-            "drift_speed": random.uniform(0.2, 0.5),
-            "drift_amp": random.uniform(8, 18),
+            "drift_speed": random.uniform(0.15, 0.4),
+            "drift_amp": random.uniform(6, 14),
         }
 
     def update(self, dt: float, time: float):
         for e in self.emoji_list:
             e["y"] += e["speed_y"] * dt
             e["x"] += math.sin(time * e["drift_speed"] + e["drift_offset"]) * e["drift_amp"] * dt
-            if e["y"] < -120:
-                new_e = self._new_emoji(random_y=False)
+            if e["y"] < -170:
+                new_e = self._new_emoji_spaced(random_y=False)
                 e.update(new_e)
 
     def draw(self, img: Image.Image, time: float = 0.0):
@@ -310,7 +344,7 @@ def generate_intro(output_dir: Path, duration: float = 6.0):
     dt = 1.0 / FPS
 
     bokeh = BokehLights(num_lights=10)
-    food_emoji = FloatingFoodEmoji(num_emoji=40, categories=["dishes", "ingredients", "kitchen"])
+    food_emoji = FloatingFoodEmoji(num_emoji=8, categories=["dishes", "ingredients", "kitchen", "sweet"])
 
     for frame_idx in range(total_frames):
         progress = frame_idx / max(1, total_frames - 1)
@@ -418,7 +452,7 @@ def generate_outro(output_dir: Path, duration: float = 9.0):
     dt = 1.0 / FPS
 
     bokeh = BokehLights(num_lights=12)
-    food_emoji = FloatingFoodEmoji(num_emoji=45, categories=["dishes", "kitchen", "sweet"])
+    food_emoji = FloatingFoodEmoji(num_emoji=9, categories=["dishes", "ingredients", "kitchen", "sweet"])
 
     for frame_idx in range(total_frames):
         progress = frame_idx / max(1, total_frames - 1)
