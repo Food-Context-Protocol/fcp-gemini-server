@@ -1,0 +1,10 @@
+# Default owner for everything
+* @Food-Context-Protocol/maintainers
+
+# Security-sensitive files require security team review
+src/fcp/auth/ @Food-Context-Protocol/security
+src/fcp/security/ @Food-Context-Protocol/security
+.github/workflows/ @Food-Context-Protocol/security
+Dockerfile* @Food-Context-Protocol/security
+cloudbuild*.yaml @Food-Context-Protocol/security
+service.yaml @Food-Context-Protocol/security

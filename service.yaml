@@ -25,13 +25,16 @@ spec:
         - name: STORAGE_BACKEND
           value: cloud
         - name: GCS_BUCKET
-          value: fcp-uploads-146487230485
+          valueFrom:
+            secretKeyRef:
+              name: gcs-bucket
+              key: latest
         - name: ENVIRONMENT
           value: production
         - name: FCP_DATA_DIR
           value: /tmp
         - name: LOG_LEVEL
-          value: debug
+          value: info
         - name: GEMINI_API_KEY
           valueFrom:
             secretKeyRef:
