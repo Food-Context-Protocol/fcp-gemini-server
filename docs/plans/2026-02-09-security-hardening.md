@@ -1,6 +1,6 @@
 # FCP Organization Security Hardening Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **Note:** This plan is intended to be implemented and tracked task-by-task, either manually or via automation.
 
 **Goal:** Harden all 8 Food-Context-Protocol repositories against the critical, high, and medium severity vulnerabilities discovered during comprehensive security audit.
 
@@ -535,11 +535,7 @@ git commit -m "security: use timing-safe comparison for token validation"
 **Files:**
 - Modify: `fcp-gemini-server/.github/workflows/deploy.yml`
 
-**Context:** The deploy workflow exposes in plaintext:
-- GCP Project ID: `gen-lang-client-0364405841`
-- Workload Identity Provider: `projects/146487230485/locations/global/workloadIdentityPools/github-pool/providers/github-provider`
-- Service Account: `github-deployer@gen-lang-client-0364405841.iam.gserviceaccount.com`
-- Cloud Run URLs: `fcp-api-2byhoxyx5q-uc.a.run.app`, `fcp-mcp-2byhoxyx5q-uc.a.run.app`
+**Context:** The deploy workflow exposes GCP infrastructure details in plaintext (project ID, Workload Identity provider, service account, Cloud Run URLs).
 
 While Workload Identity Federation is the correct approach (no long-lived keys), exposing project IDs and service accounts gives attackers reconnaissance data.
 
@@ -548,12 +544,12 @@ While Workload Identity Federation is the correct approach (no long-lived keys),
 ```bash
 cd fcp-gemini-server
 
-gh secret set GCP_PROJECT_ID --body "gen-lang-client-0364405841"
-gh secret set GCP_WIF_PROVIDER --body "projects/146487230485/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
-gh secret set GCP_SERVICE_ACCOUNT --body "github-deployer@gen-lang-client-0364405841.iam.gserviceaccount.com"
-gh secret set GCP_REGION --body "us-central1"
-gh secret set CLOUD_RUN_API_URL --body "https://fcp-api-2byhoxyx5q-uc.a.run.app"
-gh secret set CLOUD_RUN_MCP_URL --body "https://fcp-mcp-2byhoxyx5q-uc.a.run.app"
+gh secret set GCP_PROJECT_ID --body "<YOUR_GCP_PROJECT_ID>"
+gh secret set GCP_WIF_PROVIDER --body "<YOUR_WIF_PROVIDER>"
+gh secret set GCP_SERVICE_ACCOUNT --body "<YOUR_SERVICE_ACCOUNT>"
+gh secret set GCP_REGION --body "<YOUR_GCP_REGION>"
+gh secret set CLOUD_RUN_API_URL --body "<YOUR_API_URL>"
+gh secret set CLOUD_RUN_MCP_URL --body "<YOUR_MCP_URL>"
 ```
 
 **Step 2: Update `deploy.yml` to reference secrets**
@@ -563,7 +559,7 @@ Replace the hardcoded `env:` block and inline values:
 ```yaml
 # BEFORE:
 env:
-  PROJECT_ID: gen-lang-client-0364405841
+  PROJECT_ID: <GCP_PROJECT_ID>
   REGION: us-central1
 
 # AFTER:
@@ -576,8 +572,8 @@ Replace Workload Identity Federation references:
 
 ```yaml
 # BEFORE:
-workload_identity_provider: 'projects/146487230485/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-service_account: 'github-deployer@gen-lang-client-0364405841.iam.gserviceaccount.com'
+workload_identity_provider: '<WIF_PROVIDER>'
+service_account: '<SERVICE_ACCOUNT>'
 
 # AFTER:
 workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
@@ -588,8 +584,8 @@ Replace hardcoded health check URLs:
 
 ```yaml
 # BEFORE:
-curl -f https://fcp-api-2byhoxyx5q-uc.a.run.app/health/live
-curl -f https://fcp-mcp-2byhoxyx5q-uc.a.run.app/health
+curl -f ${{ secrets.CLOUD_RUN_API_URL }}/health/live
+curl -f ${{ secrets.CLOUD_RUN_MCP_URL }}/health
 
 # AFTER:
 curl -f ${{ secrets.CLOUD_RUN_API_URL }}/health/live
@@ -936,18 +932,18 @@ git commit -m "security: add least-privilege permissions and fork protection to 
 **Files:**
 - Modify: `fcp-gemini-server/service.yaml`
 
-**Context:** The GCS bucket name `fcp-uploads-146487230485` is exposed in `service.yaml`. While the bucket requires authentication, the name gives attackers a target. Move it to Cloud Run secrets.
+**Context:** The GCS bucket name `<GCS_BUCKET_NAME>` is exposed in `service.yaml`. While the bucket requires authentication, the name gives attackers a target. Move it to Cloud Run secrets.
 
 **Step 1: Add bucket name as a Cloud Run secret**
 
 ```bash
 gcloud secrets create GCS_BUCKET_NAME \
   --replication-policy="automatic" \
-  --project=gen-lang-client-0364405841
+  --project=<GCP_PROJECT_ID>
 
-echo -n "fcp-uploads-146487230485" | gcloud secrets versions add GCS_BUCKET_NAME \
+echo -n "<GCS_BUCKET_NAME>" | gcloud secrets versions add GCS_BUCKET_NAME \
   --data-file=- \
-  --project=gen-lang-client-0364405841
+  --project=<GCP_PROJECT_ID>
 ```
 
 **Step 2: Update `service.yaml` to reference the secret**
@@ -955,7 +951,7 @@ echo -n "fcp-uploads-146487230485" | gcloud secrets versions add GCS_BUCKET_NAME
 ```yaml
 # BEFORE:
 - name: GCS_BUCKET_NAME
-  value: "fcp-uploads-146487230485"
+  value: "<GCS_BUCKET_NAME>"
 
 # AFTER:
 - name: GCS_BUCKET_NAME
@@ -1024,7 +1020,7 @@ done
 
 ```bash
 # 6. Verify deploy.yml uses secrets not hardcoded values
-grep -c "gen-lang-client-0364405841" fcp-gemini-server/.github/workflows/deploy.yml
+grep -c "<GCP_PROJECT_ID>" fcp-gemini-server/.github/workflows/deploy.yml
 # Expected: 0
 
 # 9. Verify LOG_LEVEL is not debug
