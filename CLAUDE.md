@@ -27,10 +27,11 @@ make test                         # Run unit tests (excludes integration/)
 make test-quick                   # Fast tests without coverage
 make coverage                     # Tests with coverage report
 
-# Lint & Format
+# Lint, Format & Type Check
 make lint                         # Lint with ruff
 make format                       # Format with ruff
 make typecheck                    # Type check with ty
+make prek                         # Run all prek hooks (ruff + ty)
 make check                        # All checks: format-check + lint + coverage
 ```
 
@@ -238,23 +239,28 @@ Test environment automatically sets:
 - `ENABLE_METRICS=false`
 - `ENABLE_TELEMETRY=false`
 
-### Linting & Type Checking
+### Linting, Formatting & Type Checking
 
 ```bash
-make lint          # ruff check
-make format        # ruff format
-make typecheck     # ty check
+make lint          # ruff check src/ tests/
+make lint-fix      # ruff check --fix src/ tests/
+make format        # ruff format src/ tests/
+make format-check  # ruff format --check (CI-friendly)
+make typecheck     # uv run ty check src/ tests/
+make prek          # prek run --all-files (runs ruff + ty together)
 ```
 
-- **Ruff**: Line length 120, target Python 3.11, rules: E, F, I, N, W, UP
-- **ty**: Type checker with several dynamic-type ignores configured for google-genai
-- Pre-commit hooks run: format, lint (pre-commit), coverage (pre-push)
+- **Ruff** (`ruff`): Linter and formatter. Line length 120, target Python 3.11, rules: E, F, I, N, W, UP. Ignores E501 (handled by formatter). Excludes `src/fcp/client`.
+- **ty** (`ty`): Type checker (configured in `pyproject.toml` under `[tool.ty]`). Run via `make typecheck` or as part of `make prek`. Several rules are set to `"ignore"` for dynamic `google-genai` types and Pydantic patterns: `unresolved-attribute`, `invalid-argument-type`, `unused-ignore-comment`, `unresolved-import`, `missing-argument`, `unknown-argument`, `possibly-missing-attribute`, `not-iterable`. Excludes `src/fcp/client`.
+- **prek**: Runs all configured hooks (ruff + ty) across all files in one command. Use `make prek` for a quick full check before committing.
 
 ### Pre-commit Hooks
 
 Configured in `.pre-commit-config.yaml`:
-- **Pre-commit**: YAML check, trailing whitespace, end-of-file fixer, `make format`, `make lint typecheck`
-- **Pre-push**: `make coverage`
+- **Pre-commit stage**: YAML check, trailing whitespace, end-of-file fixer, `make format`, `make lint typecheck`
+- **Pre-push stage**: `make coverage` (runs full test suite with coverage)
+
+Additionally, `prek` provides a standalone way to run ruff + ty without git hooks: `make prek`.
 
 ### Docker & Deployment
 
