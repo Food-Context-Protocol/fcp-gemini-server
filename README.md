@@ -31,7 +31,7 @@ For the **protocol specification**, see: [Food-Context-Protocol/fcp](https://git
 
 - ✅ **43 MCP Tools** - Nutrition, recipes, safety, inventory, planning
 - ✅ **Dual Transport** - MCP stdio + REST HTTP API
-- ✅ **100% Test Coverage** - 2,759 passing tests
+- ✅ **100% Test Coverage** - 2,981 passing tests
 - ✅ **Gemini 3 Integration** - 15+ features (multimodal, grounding, thinking, Live API)
 - ✅ **Type-Safe** - Pydantic schemas for all inputs/outputs
 - ✅ **Auto-Generated SDKs** - Python + TypeScript via Fern
@@ -338,41 +338,6 @@ We welcome contributions! See the main [CONTRIBUTING.md](https://github.com/Food
 - Testing requirements
 - Pull request process
 
-## Demo Video Production
-
-Complete video production pipeline for generating the 3-minute FCP demo video.
-
-📁 **All video generation code:** [`demo-video/`](demo-video/)
-
-### Quick Start
-```bash
-cd demo-video
-
-# Generate final video (3:00 duration)
-python preview_timeline_animated.py --format mp4 --speed 1.0 --output timeline_final.mp4
-
-# Upload to YouTube as "Unlisted" for hackathon submission
-```
-
-### Features
-- 🎬 Professional motion graphics (Ken Burns effects, animated overlays)
-- 📊 Progress bar and shot indicators
-- ⏱️ Exactly 3:00 duration (meets Gemini 3 Hackathon requirements)
-- 🎥 1920×1080, 30fps, H.264 encoding
-- 📦 2.2 MB output size
-
-### Documentation
-- 📚 **[Demo Video README](demo-video/README.md)** - Usage and technical details
-- 📖 **[Technical Documentation](demo-video/DOCUMENTATION.md)** - Complete technical guide
-- 🎬 **[Video Storyboard](docs/video-storyboard.md)** - 24-shot breakdown
-- 📸 **[Screenshot Guide](docs/screenshot-capture-guide.md)** - Asset creation guide
-
-### YouTube Upload
-For competition submissions, upload as **"Unlisted"**:
-- ✅ Accessible via direct link for judges
-- ✅ Not searchable or discoverable publicly
-- ✅ Standard practice for hackathon submissions
-
 ## Protocol Specification
 
 This implementation follows the Food Context Protocol specification:
@@ -382,9 +347,9 @@ This implementation follows the Food Context Protocol specification:
 ## Related Repositories
 
 - [fcp](https://github.com/Food-Context-Protocol/fcp) - Protocol specification
-- [python-sdk](https://github.com/Food-Context-Protocol/python-sdk) - Python SDK _(coming soon)_
-- [typescript-sdk](https://github.com/Food-Context-Protocol/typescript-sdk) - TypeScript SDK _(coming soon)_
-- [examples](https://github.com/Food-Context-Protocol/examples) - Sample applications _(coming soon)_
+- [fcp-cli](https://github.com/Food-Context-Protocol/fcp-cli) - Command-line interface
+- [python-sdk](https://github.com/Food-Context-Protocol/python-sdk) - Python SDK
+- [typescript-sdk](https://github.com/Food-Context-Protocol/typescript-sdk) - TypeScript SDK
 
 ## License
 

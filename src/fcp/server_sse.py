@@ -4,18 +4,15 @@ This allows MCP clients to connect over HTTP instead of stdio.
 Deployed at mcp.fcp.dev for remote access.
 """
 
-import json
 import logging
 import os
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
 from mcp.types import TextContent, Tool
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.routing import Mount, Route
 
 from fcp.auth.permissions import DEMO_USER_ID, AuthenticatedUser, UserRole
 from fcp.mcp.initialize import initialize_tools
@@ -49,58 +46,32 @@ def get_sse_user(authorization: str | None = None) -> AuthenticatedUser:
     - Valid token matching FCP_TOKEN -> authenticated admin user
     - No FCP_TOKEN configured -> use token as user_id (backward compat)
     """
-    # No authorization header
     if not authorization:
         return AuthenticatedUser(user_id=DEMO_USER_ID, role=UserRole.DEMO)
 
-    # Extract token from "Bearer <token>"
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         return AuthenticatedUser(user_id=DEMO_USER_ID, role=UserRole.DEMO)
 
     token = parts[1]
 
-    # Validate token against FCP_TOKEN if configured
     expected_token = os.environ.get("FCP_TOKEN")
     if expected_token:
         if token != expected_token:
             return AuthenticatedUser(user_id=DEMO_USER_ID, role=UserRole.DEMO)
         return AuthenticatedUser(user_id="admin", role=UserRole.AUTHENTICATED)
 
-    # No FCP_TOKEN configured - treat token as user_id (backward compatible)
     return AuthenticatedUser(user_id=token, role=UserRole.AUTHENTICATED)
 
 
 # Initialize tools
 initialize_tools()
 
-# Create FastAPI app
-app = FastAPI(
-    title="FCP MCP Server (SSE)",
-    description="Model Context Protocol server with SSE transport",
-    version="1.0.0",
-)
-
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        response: Response = await call_next(request)
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        return response
-
-
-app.add_middleware(SecurityHeadersMiddleware)
-
 # Create MCP server
 mcp_server = Server("fcp-mcp-server")
 
-
-@app.get("/health")
-async def health():
-    """Health check endpoint."""
-    return {"status": "healthy", "transport": "sse", "tools": len(tool_registry.list_tools())}
+# Create SSE transport singleton — maps SSE sessions to /messages/ POSTs
+sse_transport = SseServerTransport("/messages/")
 
 
 @mcp_server.list_tools()
@@ -117,61 +88,36 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     return result.contents
 
 
+async def handle_sse(request: Request):
+    """MCP SSE endpoint — raw ASGI handler (no StreamingResponse wrapper).
+
+    SseServerTransport.connect_sse takes over the response via send().
+    """
+    async with sse_transport.connect_sse(request.scope, request.receive, request._send) as streams:
+        await mcp_server.run(
+            streams[0],
+            streams[1],
+            mcp_server.create_initialization_options(),
+        )
+
+
+# Build the FastAPI app with Starlette routes for ASGI endpoints
+app = FastAPI(
+    title="FCP MCP Server (SSE)",
+    description="Model Context Protocol server with SSE transport",
+    version="1.0.0",
+    routes=[
+        Route("/sse", endpoint=handle_sse),
+        Mount("/messages/", app=sse_transport.handle_post_message),
+    ],
+)
+
+
+@app.get("/health")
 @app.get("/")
-async def sse_endpoint(request: Request):
-    """MCP over SSE endpoint.
-
-    This endpoint establishes an SSE connection for MCP communication.
-    Clients send messages to /messages and receive responses via SSE.
-    """
-
-    async def event_generator():
-        """Generate SSE events."""
-        # Create SSE transport
-        transport = SseServerTransport("/messages")
-
-        try:
-            # Connect SSE streams
-            async with transport.connect_sse(
-                request.scope,
-                request.receive,
-                request._send,
-            ) as streams:
-                # Run MCP server
-                await mcp_server.run(
-                    streams[0],  # read stream
-                    streams[1],  # write stream
-                    mcp_server.create_initialization_options(),
-                )
-        except Exception as e:
-            logger.error("SSE connection error: %s", e)
-            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  # Disable nginx buffering
-        },
-    )
-
-
-@app.post("/messages")
-async def messages_endpoint(request: Request):
-    """Receive messages from SSE clients.
-
-    Clients send JSON-RPC messages here, responses come via SSE.
-    """
-    message = await request.json()
-    logger.info("Received SSE message")
-    logger.debug("SSE message content: %s", message)
-
-    # Process message through MCP server
-    # (Handled by SSE transport internally)
-
-    return {"status": "received"}
+async def health():
+    """Health check endpoint."""
+    return {"status": "healthy", "transport": "sse", "tools": len(tool_registry.list_tools())}
 
 
 if __name__ == "__main__":
