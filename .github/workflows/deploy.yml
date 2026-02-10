@@ -25,7 +25,6 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          # Instructions: Replace these with your actual Pool/Provider/SA after setup
           workload_identity_provider: 'projects/146487230485/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
           service_account: 'github-deployer@gen-lang-client-0364405841.iam.gserviceaccount.com'
 
@@ -34,13 +33,40 @@ jobs:
 
       - name: Build and Deploy API
         run: |
-          gcloud builds submit --config cloudbuild.yaml
+          BUILD_ID=$(gcloud builds submit --config cloudbuild.yaml --async --format='value(id)')
+          echo "Waiting for build $BUILD_ID..."
+          while true; do
+            STATUS=$(gcloud builds describe "$BUILD_ID" --format='value(status)')
+            echo "  Status: $STATUS"
+            case "$STATUS" in
+              SUCCESS) break ;;
+              FAILURE|TIMEOUT|CANCELLED|INTERNAL_ERROR|EXPIRED)
+                echo "Build failed with status: $STATUS"
+                gcloud builds log "$BUILD_ID" --stream 2>/dev/null || true
+                exit 1 ;;
+            esac
+            sleep 15
+          done
 
       - name: Build and Deploy MCP
         run: |
-          gcloud builds submit --config cloudbuild-mcp.yaml
+          BUILD_ID=$(gcloud builds submit --config cloudbuild-mcp.yaml --async --format='value(id)')
+          echo "Waiting for build $BUILD_ID..."
+          while true; do
+            STATUS=$(gcloud builds describe "$BUILD_ID" --format='value(status)')
+            echo "  Status: $STATUS"
+            case "$STATUS" in
+              SUCCESS) break ;;
+              FAILURE|TIMEOUT|CANCELLED|INTERNAL_ERROR|EXPIRED)
+                echo "Build failed with status: $STATUS"
+                gcloud builds log "$BUILD_ID" --stream 2>/dev/null || true
+                exit 1 ;;
+            esac
+            sleep 15
+          done
 
       - name: Verify Deployment
         run: |
-          curl -f https://api.fcp.dev/health
-          curl -f https://mcp.fcp.dev/health
+          sleep 30
+          curl -f https://fcp-api-2byhoxyx5q-uc.a.run.app/health/live
+          curl -f https://fcp-mcp-2byhoxyx5q-uc.a.run.app/health
