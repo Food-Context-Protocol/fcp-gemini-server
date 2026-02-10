@@ -62,7 +62,7 @@ class TestConfig:
 
     def test_cors_origins(self):
         """Config has correct CORS origins."""
-        assert "https://fcp.dev" in Config.PRODUCTION_CORS_ORIGINS
+        assert "https://fcp.dev" in list(Config.PRODUCTION_CORS_ORIGINS)
         assert "http://localhost:8080" in Config.DEVELOPMENT_CORS_ORIGINS
 
     def test_service_info(self):

@@ -69,7 +69,7 @@ async def geocode_address(address: str) -> GeocodingResult | None:
             longitude=location["lng"],
             formatted_address=result.get("formatted_address", address),
         )
-        logger.info("Geocoded '%s' to (%.4f, %.4f)", address, geocoded.latitude, geocoded.longitude)
+        logger.info("Geocoded '%s' successfully", address)
         return geocoded
 
     except Exception as e:
@@ -156,9 +156,7 @@ async def find_nearby_places(
 
     try:
         logger.info(
-            "Searching places: lat=%.4f, lon=%.4f, radius=%dm, types=%s",
-            latitude,
-            longitude,
+            "Searching places: radius=%dm, types=%s",
             int(radius),
             included_types,
         )

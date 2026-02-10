@@ -275,15 +275,15 @@ class TestAllowedDomainsConfig:
 
     def test_firebase_storage_allowed(self):
         """Test that Firebase Storage is allowed."""
-        assert "firebasestorage.googleapis.com" in ALLOWED_DOMAINS
+        assert "firebasestorage.googleapis.com" in set(ALLOWED_DOMAINS)
 
     def test_gcs_allowed(self):
         """Test that GCS is allowed."""
-        assert "storage.googleapis.com" in ALLOWED_DOMAINS
+        assert "storage.googleapis.com" in set(ALLOWED_DOMAINS)
 
     def test_cloudinary_allowed(self):
         """Test that Cloudinary is allowed."""
-        assert "res.cloudinary.com" in ALLOWED_DOMAINS
+        assert "res.cloudinary.com" in set(ALLOWED_DOMAINS)
 
     def test_localhost_allowed_for_dev(self):
         """Test that localhost is allowed for development."""

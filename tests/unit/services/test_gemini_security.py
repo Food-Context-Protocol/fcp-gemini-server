@@ -792,7 +792,7 @@ class TestFetchMediaImageURLErrorConversion:
             with pytest.raises(ValueError) as exc_info:
                 await gemini_client._fetch_media("https://evil.com/image.jpg")
 
-            assert "evil.com" in str(exc_info.value)
+            assert "evil.com" in str(exc_info.value).split()
             assert "allowed list" in str(exc_info.value)
 
 
