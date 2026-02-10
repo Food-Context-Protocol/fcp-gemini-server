@@ -6,6 +6,7 @@ Demo mode: Unauthenticated users get read-only access to shared sample data.
 
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 
@@ -59,7 +60,7 @@ async def get_current_user(authorization: str | None = Header(None)) -> Authenti
     # Validate token against FCP_TOKEN if configured
     expected_token = os.environ.get("FCP_TOKEN")
     if expected_token:
-        if token != expected_token:
+        if not hmac.compare_digest(token.encode(), expected_token.encode()):
             logger.warning("Invalid token provided, falling back to demo user")
             record_auth_failure("invalid_token")
             return AuthenticatedUser(user_id=DEMO_USER_ID, role=UserRole.DEMO)
