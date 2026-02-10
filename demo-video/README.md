@@ -6,7 +6,7 @@ This directory contains the complete video production pipeline for generating th
 
 ```bash
 # Install dependencies
-pip install Pillow rich
+uv add Pillow rich
 
 # Generate final video (3:00 duration)
 python preview_timeline_animated.py --format mp4 --speed 1.0 --output timeline_final.mp4
@@ -114,7 +114,7 @@ Asset mapping is configured in `timeline_config.json` via `asset_name` and `asse
 
 ```bash
 # Required
-pip install Pillow rich
+uv add Pillow rich
 
 # System requirement
 brew install ffmpeg  # macOS
@@ -179,7 +179,7 @@ brew install ffmpeg  # macOS
 
 **PIL/Pillow missing:**
 ```bash
-pip install Pillow
+uv add Pillow
 ```
 
 **Assets not loading:**

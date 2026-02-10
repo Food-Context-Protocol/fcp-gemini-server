@@ -280,9 +280,7 @@ source ~/.zshrc
 
 ### Error: "google-genai package not installed"
 ```bash
-pip install google-genai
-# or
-uv pip install google-genai
+uv add google-genai
 ```
 
 ### No image generated, only text response
@@ -361,7 +359,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install google-genai
+      - run: uv add google-genai
       - run: python scripts/generate_logo.py --${{ github.event.inputs.style }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

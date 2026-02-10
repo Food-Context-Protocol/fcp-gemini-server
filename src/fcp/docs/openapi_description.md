@@ -42,7 +42,7 @@ Authorization: Bearer <firebase-id-token>
 ## SDKs
 
 Official SDKs are available for:
-- Python: `pip install fcp-api`
+- Python: `uv add fcp-api`
 - TypeScript: `npm install @fcp/client`
 
 ## Support

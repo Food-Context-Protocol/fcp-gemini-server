@@ -201,7 +201,7 @@ python preview_timeline_enhanced.py --format gif --speed 10.0 --output timeline_
 uv run --with Pillow --with rich python preview_timeline_enhanced.py
 
 # Or install packages
-pip install Pillow rich
+uv add Pillow rich
 python preview_timeline_enhanced.py
 ```
 
@@ -425,7 +425,7 @@ choco install ffmpeg
 uv run --with Pillow --with rich python preview_timeline_enhanced.py
 
 # Or pip
-pip install Pillow rich
+uv add Pillow rich
 ```
 
 ### Image Not Loading

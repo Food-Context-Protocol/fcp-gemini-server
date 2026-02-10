@@ -35,7 +35,7 @@ Install the SDK:
 
 ```bash
 # Python
-pip install fcp-python
+uv add fcp-python
 
 # TypeScript
 npm install @fcp/sdk
