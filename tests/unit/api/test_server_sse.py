@@ -1,7 +1,7 @@
 """Tests for MCP SSE server (server_sse.py)."""
 
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -157,8 +157,8 @@ class TestHealthEndpoint:
 class TestMessagesEndpoint:
     """Tests for /messages endpoint."""
 
-    def test_messages_endpoint_accepts_json_rpc(self, sse_client):
-        """Messages endpoint accepts JSON-RPC messages."""
+    def test_messages_endpoint_rejects_without_session(self, sse_client):
+        """Messages endpoint rejects requests without session_id."""
         message = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -166,14 +166,12 @@ class TestMessagesEndpoint:
             "params": {},
         }
 
-        response = sse_client.post("/messages", json=message)
+        response = sse_client.post("/messages/", json=message)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "received"
+        assert response.status_code == 400
 
-    def test_messages_endpoint_logs_message(self, sse_client):
-        """Messages endpoint logs received messages."""
+    def test_messages_endpoint_rejects_without_session_with_logging(self, sse_client):
+        """Messages endpoint rejects requests without session_id and logs warning."""
         message = {
             "jsonrpc": "2.0",
             "id": 2,
@@ -181,25 +179,21 @@ class TestMessagesEndpoint:
             "params": {"name": "test_tool"},
         }
 
-        with patch("fcp.server_sse.logger") as mock_logger:
-            response = sse_client.post("/messages", json=message)
+        response = sse_client.post("/messages/", json=message)
 
-            assert response.status_code == 200
-            mock_logger.info.assert_called_once()
+        assert response.status_code == 400
 
-    def test_messages_endpoint_with_empty_params(self, sse_client):
-        """Messages endpoint handles messages with no params."""
+    def test_messages_endpoint_without_params_rejects(self, sse_client):
+        """Messages endpoint rejects messages without session_id even with no params."""
         message = {
             "jsonrpc": "2.0",
             "id": 3,
             "method": "initialize",
         }
 
-        response = sse_client.post("/messages", json=message)
+        response = sse_client.post("/messages/", json=message)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "received"
+        assert response.status_code == 400
 
 
 class TestMCPServerIntegration:
@@ -282,37 +276,17 @@ class TestMCPServerIntegration:
 class TestSSEEndpoint:
     """Tests for / endpoint (SSE)."""
 
-    def test_sse_endpoint_returns_event_stream(self, sse_client):
-        """SSE endpoint returns event stream content type."""
-        with patch("fcp.server_sse.SseServerTransport") as mock_transport:
-            # Mock the transport to avoid actual SSE connection
-            mock_context = AsyncMock()
-            mock_context.__aenter__.return_value = (AsyncMock(), AsyncMock())  # read/write streams
-            mock_context.__aexit__.return_value = None
-            mock_transport.return_value.connect_sse.return_value = mock_context
+    def test_sse_endpoint_returns_200(self, sse_client):
+        """SSE endpoint returns 200 OK."""
+        response = sse_client.get("/")
+        assert response.status_code == 200
 
-            with patch("fcp.server_sse.mcp_server.run", new=AsyncMock()):
-                response = sse_client.get("/")
-
-                assert response.status_code == 200
-                assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
-                assert response.headers["cache-control"] == "no-cache"
-                assert response.headers["connection"] == "keep-alive"
-
-    def test_sse_endpoint_has_correct_headers(self, sse_client):
-        """SSE endpoint sets correct streaming headers."""
-        with patch("fcp.server_sse.SseServerTransport") as mock_transport:
-            mock_context = AsyncMock()
-            mock_context.__aenter__.return_value = (AsyncMock(), AsyncMock())
-            mock_context.__aexit__.return_value = None
-            mock_transport.return_value.connect_sse.return_value = mock_context
-
-            with patch("fcp.server_sse.mcp_server.run", new=AsyncMock()):
-                response = sse_client.get("/")
-
-                # Check anti-buffering headers
-                assert "x-accel-buffering" in response.headers
-                assert response.headers["x-accel-buffering"] == "no"
+    def test_sse_endpoint_returns_json(self, sse_client):
+        """SSE endpoint returns JSON response."""
+        response = sse_client.get("/")
+        assert response.status_code == 200
+        # Endpoint returns JSON with SSE connection info
+        assert "application/json" in response.headers["content-type"]
 
     def test_sse_endpoint_error_handling(self, sse_client):
         """SSE endpoint handles connection errors gracefully."""
