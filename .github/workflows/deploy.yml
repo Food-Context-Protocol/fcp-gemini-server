@@ -7,11 +7,12 @@ on:
   workflow_dispatch: # Allow manual triggers
 
 env:
-  PROJECT_ID: gen-lang-client-0364405841
-  REGION: us-central1
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: ${{ secrets.GCP_REGION }}
 
 jobs:
   deploy:
+    if: github.repository == 'Food-Context-Protocol/fcp-gemini-server'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,17 +20,17 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       - name: Google Auth
         id: auth
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed  # v2
         with:
-          workload_identity_provider: 'projects/146487230485/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: 'github-deployer@gen-lang-client-0364405841.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f  # v2
 
       - name: Build and Deploy API
         run: |
@@ -68,5 +69,5 @@ jobs:
       - name: Verify Deployment
         run: |
           sleep 30
-          curl -f https://fcp-api-2byhoxyx5q-uc.a.run.app/health/live
-          curl -f https://fcp-mcp-2byhoxyx5q-uc.a.run.app/health
+          curl -f ${{ secrets.CLOUD_RUN_API_URL }}/health/live
+          curl -f ${{ secrets.CLOUD_RUN_MCP_URL }}/health
