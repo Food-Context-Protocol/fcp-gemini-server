@@ -84,7 +84,7 @@ If you prefer to connect to our hosted demo instead of running locally, you can 
 {
   "mcpServers": {
     "fcp-remote": {
-      "url": "https://mcp.fcp.dev"
+      "url": "https://mcp.fcp.dev/sse"
     }
   }
 }

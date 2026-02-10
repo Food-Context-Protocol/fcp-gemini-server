@@ -7,7 +7,7 @@ Get started with FCP in minutes.
 ### Python
 
 ```bash
-pip install fcp-python
+uv add fcp-python
 ```
 
 ### TypeScript
@@ -85,7 +85,7 @@ Use FCP with Claude Desktop or other MCP-aware tools:
 {
   "mcpServers": {
     "fcp": {
-      "url": "https://mcp.fcp.dev",
+      "url": "https://mcp.fcp.dev/sse",
       "apiKey": "your-api-key"
     }
   }

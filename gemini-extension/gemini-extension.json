@@ -4,15 +4,12 @@
   "description": "FCP - AI-powered food journaling with taste profiles, meal discovery, and nutrition analytics",
   "mcpServers": {
     "fcp-server": {
-      "command": "uv",
-      "args": ["run", "python", "-m", "fcp.server", "--mcp"],
-      "cwd": "${extensionPath}/../../..",
+      "type": "sse",
+      "url": "https://mcp.fcp.dev/sse",
       "env": {
         "FCP_TOKEN": "${FCP_TOKEN}",
         "GEMINI_API_KEY": "${GEMINI_API_KEY}",
-        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
-        "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}",
-        "FCP_DEV_MODE": "true"
+        "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
       }
     }
   },

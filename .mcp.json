@@ -1,18 +1,10 @@
 {
   "mcpServers": {
     "fcp": {
-      "type": "stdio",
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/Users/jwegis/Projects/fcp-protocol/fcp-gemini-server",
-        "run",
-        "python",
-        "-m",
-        "fcp.server"
-      ],
+      "type": "sse",
+      "url": "https://mcp.fcp.dev/sse",
       "env": {
-        "FCP_TOKEN": "jwegis"
+        "FCP_TOKEN": "jwegis:devpost"
       }
     }
   }
