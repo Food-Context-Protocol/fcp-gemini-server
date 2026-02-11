@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
 from mcp.types import TextContent, Tool
@@ -99,6 +99,8 @@ async def handle_sse(request: Request):
             streams[1],
             mcp_server.create_initialization_options(),
         )
+    # Ensure Starlette always receives a Response object even after SSE disconnect.
+    return Response(status_code=204)
 
 
 # Build the FastAPI app with Starlette routes for ASGI endpoints
