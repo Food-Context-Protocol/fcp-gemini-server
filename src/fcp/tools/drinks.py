@@ -3,6 +3,7 @@
 from typing import Any
 
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 
 async def analyze_beverage(description: str, beverage_type: str = "auto") -> dict[str, Any]:
@@ -41,4 +42,4 @@ async def analyze_beverage(description: str, beverage_type: str = "auto") -> dic
     try:
         return await gemini.generate_json(system_instruction)
     except Exception as e:
-        return {"error": str(e)}
+        return tool_error(e, "analyzing beverage")

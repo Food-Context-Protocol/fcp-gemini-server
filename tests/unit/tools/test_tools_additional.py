@@ -14,7 +14,7 @@ async def test_delegate_to_food_agent_error():
     with patch("fcp.tools.agents.gemini.generate_json", new=AsyncMock(side_effect=Exception("boom"))):
         result = await agents.delegate_to_food_agent("visual_agent", "make a poster")
         assert result["status"] == "failed"
-        assert "boom" in result["error"]
+        assert "agent delegation" in result["error"]
 
 
 @pytest.mark.asyncio

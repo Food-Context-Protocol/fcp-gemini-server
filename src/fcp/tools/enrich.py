@@ -9,6 +9,7 @@ from fcp.prompts import PROMPTS
 from fcp.services.firestore import firestore_client
 from fcp.services.gemini import gemini
 from fcp.services.storage import is_storage_configured, storage_client
+from fcp.utils.errors import tool_error
 
 USDA_API_KEY = os.environ.get("USDA_API_KEY", "DEMO_KEY")
 
@@ -114,7 +115,7 @@ async def enrich_entry(
             log_id,
             {
                 "processing_status": "failed",
-                "processing_error": str(e),
+                "processing_error": "An error occurred during enrichment processing",
             },
         )
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "enriching food log entry"), "success": False}

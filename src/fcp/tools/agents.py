@@ -6,6 +6,7 @@ from typing import Any
 
 from fcp.mcp.registry import tool
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -66,5 +67,4 @@ async def delegate_to_food_agent(
         result = await gemini.generate_json(prompt)
         return {"agent": agent_name, "status": "completed", "result": result}
     except Exception as e:
-        logger.exception("Error during agent delegation")
-        return {"agent": agent_name, "status": "failed", "error": str(e)}
+        return {**tool_error(e, "agent delegation"), "agent": agent_name, "status": "failed"}

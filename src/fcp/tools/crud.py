@@ -7,6 +7,7 @@ from fcp.mcp.protocols import Database
 from fcp.mcp.registry import tool
 from fcp.services.firestore import firestore_client
 from fcp.services.mapper import to_schema_org_recipe
+from fcp.utils.errors import tool_error
 
 
 @tool(
@@ -138,7 +139,7 @@ async def update_meal(
         await firestore_client.update_log(user_id, log_id, valid_updates)
         return {"success": True, "updated_fields": list(valid_updates.keys())}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "updating meal"), "success": False}
 
 
 @tool(
@@ -162,7 +163,7 @@ async def delete_meal(user_id: str, log_id: str, db: Database | None = None) -> 
         await db.update_log(user_id, log_id, {"deleted": True})
         return {"success": True}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "deleting meal"), "success": False}
 
 
 @tool(
@@ -209,7 +210,7 @@ async def donate_meal(
             "message": f"Meal pledged for donation to {organization}",
         }
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "donating meal"), "success": False}
 
 
 # --- Pantry Operations (Phase 2) ---

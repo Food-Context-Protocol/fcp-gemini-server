@@ -53,7 +53,7 @@ async def generate_social_post(
             "content": f"Just had {log_data.get('dish_name')}! #FoodLog",
             "text": f"Just had {log_data.get('dish_name')}! #FoodLog",
             "hashtags": ["#food"],
-            "error": str(e),
+            "error": "An error occurred during social post generation",
         }
 
 

@@ -191,6 +191,16 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
 
+def tool_error(e: Exception, context: str = "operation") -> dict[str, Any]:
+    """Return a safe error dict for MCP tool responses.
+
+    Logs the full exception server-side but returns only a generic
+    message to the client, preventing internal details from leaking.
+    """
+    logger.exception("Tool error during %s", context)
+    return {"error": f"An error occurred during {context}. Please try again."}
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Register exception handlers with FastAPI app.
 

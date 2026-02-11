@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 
 from fcp.mcp.registry import tool
+from fcp.utils.errors import tool_error
 
 OFF_API_BASE = "https://world.openfoodfacts.org"
 OFF_API_URL = f"{OFF_API_BASE}/api/v2/product"
@@ -77,7 +78,7 @@ async def lookup_product(barcode: str) -> dict[str, Any] | None:
                 "source": "open_food_facts",
             }
         except Exception as e:
-            return {"error": str(e)}
+            return tool_error(e, "looking up product")
 
 
 async def search_by_name(

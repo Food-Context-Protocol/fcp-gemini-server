@@ -5,6 +5,7 @@ from typing import Any
 
 from fcp.mcp.registry import tool
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +70,7 @@ async def plan_food_festival(
             return json_response[0]
         return json_response
     except Exception as e:
-        logger.exception("Error planning festival")
-        return {"error": str(e), "status": "failed"}
+        return {**tool_error(e, "planning food festival"), "status": "failed"}
 
 
 @tool(
@@ -95,5 +95,4 @@ async def detect_economic_gaps(neighborhood: str, existing_cuisines: list[str]) 
             return json_response[0]
         return json_response
     except Exception as e:
-        logger.exception("Error detecting gaps")
-        return {"error": str(e)}
+        return tool_error(e, "detecting economic gaps")

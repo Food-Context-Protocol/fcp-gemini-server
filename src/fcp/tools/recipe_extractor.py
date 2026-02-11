@@ -11,6 +11,7 @@ from typing import Any
 from fcp.mcp.registry import tool
 from fcp.security.input_sanitizer import sanitize_user_input
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -141,8 +142,7 @@ For nutrition, only include if clearly shown in the source material."""
         }
 
     except Exception as e:
-        logger.exception("Error extracting recipe from media")
-        return {"error": str(e)}
+        return tool_error(e, "extracting recipe from media")
 
 
 def _parse_int(value: Any) -> int | None:

@@ -5,6 +5,7 @@ from typing import Any
 
 from fcp.mcp.registry import tool
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -50,5 +51,4 @@ async def get_flavor_pairings(subject: str, pairing_type: str = "ingredient") ->
             return json_response[0]
         return json_response
     except Exception as e:
-        logger.exception("Error in Flavor Sommelier")
-        return {"error": str(e)}
+        return tool_error(e, "getting flavor pairings")

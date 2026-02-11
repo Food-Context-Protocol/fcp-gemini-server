@@ -16,6 +16,7 @@ from typing import Any, cast
 from fcp.mcp.protocols import Database
 from fcp.mcp.registry import tool
 from fcp.services.firestore import get_firestore_client
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -169,8 +170,7 @@ async def save_recipe(
         return {"success": True, "status": "saved", "recipe_id": recipe_id}
 
     except Exception as e:
-        logger.exception("Error saving recipe")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "saving recipe"), "success": False}
 
 
 async def update_recipe(
@@ -205,8 +205,7 @@ async def update_recipe(
             return {"success": True}
         return {"success": False, "error": "Update failed"}
     except Exception as e:
-        logger.exception("Error updating recipe")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "updating recipe"), "success": False}
 
 
 @tool(
@@ -248,8 +247,7 @@ async def favorite_recipe(
 
         return {"success": False, "error": "Update failed"}
     except Exception as e:
-        logger.exception("Error updating recipe favorite status")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "favoriting recipe"), "success": False}
 
 
 @tool(
@@ -289,8 +287,7 @@ async def archive_recipe(
 
         return {"success": False, "error": "Archive failed"}
     except Exception as e:
-        logger.exception("Error archiving recipe")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "archiving recipe"), "success": False}
 
 
 @tool(
@@ -324,5 +321,4 @@ async def delete_recipe(
             return {"success": True, "status": "deleted"}
         return {"success": False, "error": f"Recipe '{recipe_id}' not found"}
     except Exception as e:
-        logger.exception("Error deleting recipe")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "deleting recipe"), "success": False}

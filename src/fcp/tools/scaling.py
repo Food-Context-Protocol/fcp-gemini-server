@@ -5,6 +5,7 @@ from typing import Any
 
 from fcp.mcp.registry import tool
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -43,5 +44,4 @@ async def scale_recipe(recipe_json: dict[str, Any], target_servings: int) -> dic
             return json_response[0]
         return json_response
     except Exception as e:
-        logger.exception("Error scaling recipe")
-        return {"error": str(e), "status": "failed"}
+        return {**tool_error(e, "scaling recipe"), "status": "failed"}
