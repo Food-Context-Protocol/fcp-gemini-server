@@ -83,5 +83,11 @@ htmlcov/
 coverage.xml
 .coverage
 
+# MCP config (may contain tokens)
+.mcp.json
+
+# Firebase debug logs (contain developer PII)
+firebase-debug.log
+
 # Large video files (exceed GitHub 100MB limit)
 demo-video/recordings/*.mp4

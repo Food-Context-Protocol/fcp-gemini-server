@@ -48,8 +48,10 @@ logs
 .DS_Store
 Thumbs.db
 *.tmp
+.env
 .env.local
 .env.*.local
+.mcp.json
 
 # SDKs (generated separately)
 sdks

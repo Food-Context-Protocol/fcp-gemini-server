@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from fcp.mcp.registry import tool
+from fcp.security.input_sanitizer import sanitize_user_input
 from fcp.services.gemini import gemini
 
 logger = logging.getLogger(__name__)
@@ -104,7 +105,8 @@ For nutrition, only include if clearly shown in the source material."""
     prompt_parts = [system_instruction, "\nExtract the recipe from the provided media."]
 
     if additional_notes:
-        prompt_parts.append(f"\nUser notes: {additional_notes}")
+        sanitized_notes = sanitize_user_input(additional_notes, max_length=500, field_name="additional_notes")
+        prompt_parts.append(f"\nUser notes: {sanitized_notes}")
 
     prompt = "\n".join(prompt_parts)
 
