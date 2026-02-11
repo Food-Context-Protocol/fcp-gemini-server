@@ -15,7 +15,7 @@ def test_cors_origins_production(monkeypatch):
     sys.modules.pop("fcp.api", None)
     api = importlib.import_module("fcp.api")
 
-    assert "https://fcp.dev" in list(api.CORS_ORIGINS)
+    assert "https://fcp.dev" in api.CORS_ORIGINS
     assert "http://localhost:3000" not in api.CORS_ORIGINS
 
 
