@@ -106,6 +106,19 @@ class TestGetSseUser:
             assert result.user_id == "custom-user-id"
             assert result.role.value == UserRole.AUTHENTICATED.value
 
+    def test_get_sse_user_no_fcp_token_production_returns_demo(self):
+        from fcp.server_sse import get_sse_user
+
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("fcp.settings.settings") as mock_settings,
+        ):
+            mock_settings.is_production = True
+            os.environ.pop("FCP_TOKEN", None)
+            result = get_sse_user("Bearer any-token")
+            assert result.user_id == DEMO_USER_ID
+            assert result.role.value == UserRole.DEMO.value
+
 
 class TestHealthEndpoint:
     """Tests for /health endpoint."""
