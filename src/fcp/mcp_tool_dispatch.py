@@ -89,10 +89,6 @@ async def dispatch_tool_call(
         # Check if tool is registered in the new registry
         tool_metadata = tool_registry.get(name)
 
-        # Fallback for short names (e.g., "get_recent_meals" -> "dev.fcp.nutrition.get_recent_meals")
-        if not tool_metadata:
-            tool_metadata = tool_registry.get_by_short_name(name)
-
         if tool_metadata:
             # Check permissions
             if tool_metadata.requires_write:
