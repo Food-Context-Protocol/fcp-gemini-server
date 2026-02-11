@@ -281,7 +281,7 @@ class TestSaveRecipe:
 
             # Assert
             assert result["success"] is False
-            assert "Database connection failed" in result["error"]
+            assert "saving recipe" in result["error"]
 
 
 class TestUpdateRecipe:
@@ -400,7 +400,7 @@ class TestUpdateRecipe:
 
             # Assert
             assert result["success"] is False
-            assert "Connection timeout" in result["error"]
+            assert "updating recipe" in result["error"]
             mock_db.get_recipe.assert_called_once_with("user_321", "recipe_def")
             mock_db.update_recipe.assert_called_once()
 
@@ -531,7 +531,7 @@ class TestFavoriteRecipe:
 
             # Assert
             assert result["success"] is False
-            assert "Database error" in result["error"]
+            assert "favoriting recipe" in result["error"]
             mock_db.get_recipe.assert_called_once_with("user_654", "recipe_ghi")
             mock_db.update_recipe.assert_called_once_with(
                 "user_654",
@@ -634,7 +634,7 @@ class TestArchiveRecipe:
 
             # Assert
             assert result["success"] is False
-            assert "Connection lost" in result["error"]
+            assert "archiving recipe" in result["error"]
             mock_db.get_recipe.assert_called_once_with("user_321", "recipe_def")
             mock_db.update_recipe.assert_called_once_with(
                 "user_321",
@@ -700,5 +700,5 @@ class TestDeleteRecipe:
 
             # Assert
             assert result["success"] is False
-            assert "Database unavailable" in result["error"]
+            assert "deleting recipe" in result["error"]
             mock_db.delete_recipe.assert_called_once_with("user_789", "recipe_xyz")

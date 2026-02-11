@@ -1486,7 +1486,12 @@ async def test_get_user_stats_calculates_from_scratch(mock_firestore_client):
     backend = FirestoreBackend(client=mock_firestore_client)
     await backend.connect()
 
-    # Add food logs for calculation
+    # Use dates relative to today so the streak is always current
+    now = datetime.now(UTC)
+    day0 = (now - timedelta(days=2)).strftime("%Y-%m-%dT10:00:00+00:00")
+    day1 = (now - timedelta(days=1)).strftime("%Y-%m-%dT10:00:00+00:00")
+    day2 = now.strftime("%Y-%m-%dT10:00:00+00:00")
+
     food_logs_collection = backend.db.collection("food_logs")
     food_logs_collection._docs = {
         "log1": MockDocument(
@@ -1494,7 +1499,7 @@ async def test_get_user_stats_calculates_from_scratch(mock_firestore_client):
             {
                 "user_id": "user1",
                 "deleted": False,
-                "created_at": "2026-02-07T10:00:00+00:00",
+                "created_at": day0,
                 "cuisine": "Italian",
             },
         ),
@@ -1503,7 +1508,7 @@ async def test_get_user_stats_calculates_from_scratch(mock_firestore_client):
             {
                 "user_id": "user1",
                 "deleted": False,
-                "created_at": "2026-02-08T10:00:00+00:00",
+                "created_at": day1,
                 "cuisine": "Chinese",
             },
         ),
@@ -1512,7 +1517,7 @@ async def test_get_user_stats_calculates_from_scratch(mock_firestore_client):
             {
                 "user_id": "user1",
                 "deleted": False,
-                "created_at": "2026-02-09T10:00:00+00:00",
+                "created_at": day2,
                 "cuisine": "Mexican",
             },
         ),
@@ -1531,7 +1536,12 @@ async def test_get_user_stats_with_cuisine_tracking(mock_firestore_client):
     backend = FirestoreBackend(client=mock_firestore_client)
     await backend.connect()
 
-    # Add food logs with different cuisines
+    # Use dates relative to today so stats calculation stays valid
+    now = datetime.now(UTC)
+    day0 = (now - timedelta(days=2)).strftime("%Y-%m-%dT10:00:00+00:00")
+    day1 = (now - timedelta(days=1)).strftime("%Y-%m-%dT10:00:00+00:00")
+    day2 = now.strftime("%Y-%m-%dT10:00:00+00:00")
+
     food_logs_collection = backend.db.collection("food_logs")
     food_logs_collection._docs = {
         "log1": MockDocument(
@@ -1539,7 +1549,7 @@ async def test_get_user_stats_with_cuisine_tracking(mock_firestore_client):
             {
                 "user_id": "user1",
                 "deleted": False,
-                "created_at": "2026-02-07T10:00:00+00:00",
+                "created_at": day0,
                 "cuisine": "Italian",
             },
         ),
@@ -1548,7 +1558,7 @@ async def test_get_user_stats_with_cuisine_tracking(mock_firestore_client):
             {
                 "user_id": "user1",
                 "deleted": False,
-                "created_at": "2026-02-08T10:00:00+00:00",
+                "created_at": day1,
                 "cuisine": "Italian",  # Duplicate cuisine
             },
         ),
@@ -1557,7 +1567,7 @@ async def test_get_user_stats_with_cuisine_tracking(mock_firestore_client):
             {
                 "user_id": "user1",
                 "deleted": False,
-                "created_at": "2026-02-09T10:00:00+00:00",
+                "created_at": day2,
                 "cuisine": "Chinese",
             },
         ),

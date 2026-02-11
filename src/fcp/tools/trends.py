@@ -7,6 +7,7 @@ from typing import Any
 from fcp.mcp.registry import tool
 from fcp.services.firestore import firestore_client
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 from fcp.utils.json_extractor import extract_json
 
 logger = logging.getLogger(__name__)
@@ -71,5 +72,4 @@ async def identify_emerging_trends(
         return {"error": "Failed to parse trend analysis", "raw_text": text}
 
     except Exception as e:
-        logger.error(f"Error spotting trends: {e}")
-        return {"error": str(e)}
+        return tool_error(e, "identifying emerging trends")

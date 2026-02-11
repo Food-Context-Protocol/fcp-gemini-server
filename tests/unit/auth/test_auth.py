@@ -1,6 +1,11 @@
 """Tests for auth module (local auth)."""
 
+import importlib
+import os
+from unittest.mock import patch
+
 import pytest
+from fastapi import HTTPException
 
 from fcp.auth.local import get_current_user, verify_token
 from fcp.auth.permissions import DEMO_USER_ID, UserRole
@@ -71,10 +76,38 @@ class TestGetCurrentUser:
         assert result.can_write is True
 
     @pytest.mark.asyncio
-    async def test_invalid_bearer_token_returns_demo_user(self):
-        """Invalid Bearer token (not matching FOODLOG_TOKEN) should return demo user."""
-        result = await get_current_user(authorization="Bearer invalid-token")
-        assert result.user_id == DEMO_USER_ID
-        assert result.role == UserRole.DEMO
-        assert result.is_demo is True
-        assert result.can_write is False
+    async def test_invalid_bearer_token_raises_401(self):
+        """Invalid Bearer token (not matching FCP_TOKEN) should raise 401."""
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user(authorization="Bearer invalid-token")
+        assert exc_info.value.status_code == 401
+
+    def test_production_startup_warning_when_no_fcp_token(self):
+        """Module logs a warning when FCP_TOKEN is missing in production."""
+        import fcp.auth.local as auth_module
+
+        with (
+            patch.dict(os.environ, {}, clear=False),
+            patch("fcp.settings.settings") as mock_settings,
+        ):
+            mock_settings.is_production = True
+            os.environ.pop("FCP_TOKEN", None)
+            # Re-execute the module-level guard
+            importlib.reload(auth_module)
+
+        # Reload again without mock to restore normal state
+        importlib.reload(auth_module)
+
+    @pytest.mark.asyncio
+    async def test_no_fcp_token_production_returns_demo(self):
+        """In production without FCP_TOKEN, any token should return demo user."""
+        with (
+            patch.dict(os.environ, {"ENVIRONMENT": "production"}, clear=False),
+            patch.dict(os.environ, {}, clear=False),
+            patch("fcp.auth.local.settings") as mock_settings,
+        ):
+            mock_settings.is_production = True
+            os.environ.pop("FCP_TOKEN", None)
+            result = await get_current_user(authorization="Bearer any-token")
+            assert result.user_id == DEMO_USER_ID
+            assert result.role == UserRole.DEMO

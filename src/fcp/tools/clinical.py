@@ -7,6 +7,7 @@ from typing import Any
 from fcp.mcp.registry import tool
 from fcp.services.firestore import firestore_client
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -81,5 +82,4 @@ async def generate_dietitian_report(user_id: str, days: int = 7, focus_area: str
             return json_response[0]
         return json_response
     except Exception as e:
-        logger.exception("Error generating dietitian report")
-        return {"error": str(e), "status": "failed"}
+        return {**tool_error(e, "generating dietitian report"), "status": "failed"}

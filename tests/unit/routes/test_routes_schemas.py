@@ -131,8 +131,9 @@ class TestImageURLRequest:
 
     def test_valid_gcs_url(self):
         """Test valid Google Cloud Storage URL."""
+        from urllib.parse import urlparse
         request = ImageURLRequest(image_url="https://storage.googleapis.com/bucket/image.jpg")
-        assert "storage.googleapis.com" in request.image_url
+        assert urlparse(request.image_url).hostname == "storage.googleapis.com"
 
     def test_valid_cloudinary_url(self):
         """Test valid Cloudinary URL."""

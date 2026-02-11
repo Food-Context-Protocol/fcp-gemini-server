@@ -128,7 +128,7 @@ async def test_identify_emerging_trends_exception():
         result = await identify_emerging_trends(user_id)
 
         assert "error" in result
-        assert "Gemini API error" in result["error"]
+        assert "identifying emerging trends" in result["error"]
 
 
 @pytest.mark.asyncio

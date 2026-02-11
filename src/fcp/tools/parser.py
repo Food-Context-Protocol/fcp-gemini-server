@@ -8,6 +8,7 @@ from typing import Any
 from fcp.mcp.registry import tool
 from fcp.services.firestore import get_firestore_client
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -188,8 +189,7 @@ async def parse_menu(image_url: str, neighborhood: str | None = None) -> dict[st
             return json_response[0]
         return json_response
     except Exception as e:
-        logger.exception("Error parsing menu")
-        return {"error": str(e)}
+        return tool_error(e, "parsing menu")
 
 
 @tool(
@@ -282,8 +282,7 @@ Guidelines:
             "tax": _safe_float(result.get("tax", 0)),
         }
     except Exception as e:
-        logger.exception("Error parsing receipt")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "parsing receipt"), "success": False}
 
 
 async def add_items_from_receipt(

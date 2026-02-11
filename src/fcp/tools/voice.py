@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ async def process_voice_meal_log(
             "meal_data": None,
             "response_text": None,
             "status": "error",
-            "error": str(e),
+            "error": "An error occurred during voice meal logging",
         }
 
 
@@ -164,5 +165,5 @@ async def voice_food_query(
             "query": None,
             "response_text": None,
             "status": "error",
-            "error": str(e),
+            "error": "An error occurred during voice food query",
         }

@@ -78,7 +78,8 @@ async def test_open_food_facts_lookup_exception():
 
     with patch("fcp.tools.external.open_food_facts.httpx.AsyncClient", new=lambda *a, **k: ErrorClient(None)):
         result = await open_food_facts.lookup_product("123")
-        assert result == {"error": "boom"}
+        assert "error" in result
+        assert "looking up product" in result["error"]
 
 
 @pytest.mark.asyncio

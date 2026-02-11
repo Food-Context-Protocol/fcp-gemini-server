@@ -1561,6 +1561,35 @@ class TestBrowserAutomationService:
         service.page.goto.assert_not_called()
 
     @pytest.mark.asyncio
+    async def test_execute_action_navigate_rejects_ssrf(self):
+        """Test that navigation rejects SSRF URLs."""
+        from fcp.security.url_validator import ImageURLError
+        from fcp.services.browser_automation import (
+            BrowserAction,
+            BrowserAutomationService,
+        )
+
+        service = BrowserAutomationService()
+        service.page = AsyncMock()
+
+        action = BrowserAction(action="navigate", url="http://169.254.169.254/latest/meta-data/")
+        with pytest.raises(ImageURLError, match="not allowed"):
+            await service._execute_action(action)
+
+        service.page.goto.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_import_recipe_rejects_ssrf_url(self):
+        """Test that import_recipe_from_url rejects SSRF URLs."""
+        from fcp.security.url_validator import ImageURLError
+        from fcp.services.browser_automation import BrowserAutomationService
+
+        service = BrowserAutomationService()
+
+        with pytest.raises(ImageURLError, match="private/internal"):
+            await service.import_recipe_from_url("http://10.0.0.1/admin")
+
+    @pytest.mark.asyncio
     async def test_execute_action_key_combination(self):
         """Test key combination action."""
         from fcp.services.browser_automation import (

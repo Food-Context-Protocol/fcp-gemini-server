@@ -145,7 +145,7 @@ class TestDeleteMeal:
 
         # Assert
         assert result["success"] is False
-        assert "Database error" in result["error"]
+        assert "deleting meal" in result["error"]
         mock_container.database.update_log.assert_called_once()
 
 

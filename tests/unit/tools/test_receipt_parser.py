@@ -365,7 +365,7 @@ class TestParseReceipt:
             result = await parse_receipt("https://example.com/receipt.jpg")
 
             assert result["success"] is False
-            assert "API Error" in result["error"]
+            assert "parsing receipt" in result["error"]
 
     @pytest.mark.asyncio
     async def test_parse_receipt_defaults_date_to_today_when_missing(self):

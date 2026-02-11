@@ -8,6 +8,7 @@ from typing import Any
 from fcp.mcp.registry import tool
 from fcp.services.firestore import firestore_client
 from fcp.services.gemini import gemini
+from fcp.utils.errors import tool_error
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +76,7 @@ async def suggest_recipe_from_pantry(
             "context": context,
         }
     except Exception as e:
-        logger.exception("Error suggesting from pantry")
-        return {"error": str(e), "status": "failed"}
+        return {**tool_error(e, "suggesting recipes from pantry"), "status": "failed"}
 
 
 @tool(
@@ -122,8 +122,7 @@ async def check_pantry_expiry(user_id: str) -> dict[str, Any]:
     try:
         return await gemini.generate_json(f"{system_instruction}\n\n{prompt}")
     except Exception as e:
-        logger.exception("Error checking expiry")
-        return {"error": str(e)}
+        return tool_error(e, "checking pantry expiry")
 
 
 async def add_to_pantry(user_id: str, items: list[str]) -> list[str]:
@@ -369,8 +368,7 @@ async def update_pantry_item(
         result_id = await firestore_client.update_pantry_item(user_id, item_data)
         return {"success": True, "status": "updated", "item_id": result_id}
     except Exception as e:
-        logger.exception("Error updating pantry item")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "updating pantry item"), "success": False}
 
 
 @tool(
@@ -399,8 +397,7 @@ async def delete_pantry_item(
             return {"success": True, "status": "deleted"}
         return {"success": False, "error": f"Pantry item '{item_id}' not found"}
     except Exception as e:
-        logger.exception("Error deleting pantry item")
-        return {"success": False, "error": str(e)}
+        return {**tool_error(e, "deleting pantry item"), "success": False}
 
 
 async def suggest_meals_from_pantry(

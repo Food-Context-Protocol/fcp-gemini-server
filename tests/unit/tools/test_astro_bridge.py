@@ -106,7 +106,7 @@ async def test_astro_bridge_requests_success_and_errors():
 
         with patch("fcp.tools.astro.httpx.AsyncClient", new=error_factory):
             result = await bridge.publish_post({"title": "hi"}, "u1")
-            assert "Network error" in result["error"]
+            assert "error" in result
 
 
 def test_get_astro_bridge_singleton():
@@ -163,8 +163,8 @@ async def test_astro_bridge_update_delete_get_exceptions():
 
         with patch("fcp.tools.astro.httpx.AsyncClient", new=lambda *a, **k: ErrorClient()):
             result = await bridge.update_post("p1", {"title": "x"})
-            assert "Network error" in result["error"]
+            assert "error" in result
             result = await bridge.delete_post("p1")
-            assert "Network error" in result["error"]
+            assert "error" in result
             result = await bridge.get_analytics("p1")
-            assert "Network error" in result["error"]
+            assert "error" in result

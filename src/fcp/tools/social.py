@@ -3,6 +3,7 @@
 from typing import Any
 
 from fcp.mcp.registry import tool
+from fcp.security.input_sanitizer import sanitize_user_input
 from fcp.services.gemini import gemini
 
 
@@ -52,7 +53,7 @@ async def generate_social_post(
             "content": f"Just had {log_data.get('dish_name')}! #FoodLog",
             "text": f"Just had {log_data.get('dish_name')}! #FoodLog",
             "hashtags": ["#food"],
-            "error": str(e),
+            "error": "An error occurred during social post generation",
         }
 
 
@@ -74,7 +75,8 @@ async def generate_weekly_digest(food_logs: list[dict[str, Any]], user_name: str
     }
     """
 
-    prompt = f"User: {user_name or 'Foodie'}\nMeals:\n{food_logs}"
+    safe_name = sanitize_user_input(user_name, max_length=100, field_name="user_name") if user_name else "Foodie"
+    prompt = f"User: {safe_name}\nMeals:\n{food_logs}"
 
     try:
         return await gemini.generate_json(f"{system_instruction}\n\n{prompt}")

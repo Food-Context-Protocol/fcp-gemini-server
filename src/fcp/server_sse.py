@@ -4,6 +4,7 @@ This allows MCP clients to connect over HTTP instead of stdio.
 Deployed at mcp.fcp.dev for remote access.
 """
 
+import hmac
 import logging
 import os
 from typing import Any
@@ -57,10 +58,16 @@ def get_sse_user(authorization: str | None = None) -> AuthenticatedUser:
 
     expected_token = os.environ.get("FCP_TOKEN")
     if expected_token:
-        if token != expected_token:
+        if not hmac.compare_digest(token.encode(), expected_token.encode()):
+            logger.warning("SSE: invalid token rejected")
             return AuthenticatedUser(user_id=DEMO_USER_ID, role=UserRole.DEMO)
         return AuthenticatedUser(user_id="admin", role=UserRole.AUTHENTICATED)
 
+    # No FCP_TOKEN configured — deny write access in production
+    from fcp.settings import settings
+
+    if settings.is_production:
+        return AuthenticatedUser(user_id=DEMO_USER_ID, role=UserRole.DEMO)
     return AuthenticatedUser(user_id=token, role=UserRole.AUTHENTICATED)
 
 

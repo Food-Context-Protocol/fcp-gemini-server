@@ -125,7 +125,7 @@ class TestProcessVoiceMealLog:
             result = await process_voice_meal_log(audio_data=b"audio")
 
             assert result["status"] == "error"
-            assert "API error" in result["error"]
+            assert "voice meal logging" in result["error"]
             assert result["meal_data"] is None
 
     @pytest.mark.asyncio
@@ -270,7 +270,7 @@ class TestVoiceFoodQuery:
             result = await voice_food_query(audio_data=b"audio", user_id="user")
 
             assert result["status"] == "error"
-            assert "Connection failed" in result["error"]
+            assert "voice food query" in result["error"]
 
     @pytest.mark.asyncio
     async def test_passes_mime_type_and_sample_rate(self):

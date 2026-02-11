@@ -180,20 +180,14 @@ class TestGetCurrentUserDemoFallback:
             assert result.role == UserRole.DEMO
 
     @pytest.mark.asyncio
-    async def test_any_bearer_token_returns_authenticated(self):
-        """Test that invalid tokens are rejected when FCP_TOKEN is configured.
-
-        With local auth and FCP_TOKEN set, only the valid token is accepted.
-        Invalid tokens fall back to demo user.
-        """
+    async def test_any_bearer_token_raises_401(self):
+        """Test that invalid tokens are rejected with 401 when FCP_TOKEN is configured."""
         with patch("fcp.auth.local.DEMO_MODE", False):
             from fcp.auth.local import get_current_user
 
-            result = await get_current_user(authorization="Bearer any-token-value")
-
-            assert isinstance(result, AuthenticatedUser)
-            assert result.role == UserRole.DEMO  # Invalid token returns demo user
-            assert result.is_demo is True
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(authorization="Bearer any-token-value")
+            assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_valid_token_returns_authenticated_user(self):

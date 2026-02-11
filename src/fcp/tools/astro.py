@@ -20,6 +20,8 @@ from typing import Any
 
 import httpx
 
+from fcp.utils.errors import tool_error
+
 
 class AstroBridge:
     """Bridge to publish content to Astro-based blog."""
@@ -95,7 +97,7 @@ class AstroBridge:
         except httpx.TimeoutException:
             return {"success": False, "error": "Request to Astro CMS timed out"}
         except httpx.RequestError as e:
-            return {"success": False, "error": f"Network error: {str(e)}"}
+            return {**tool_error(e, "publishing post"), "success": False}
 
     async def update_post(
         self,
@@ -139,7 +141,7 @@ class AstroBridge:
         except httpx.TimeoutException:
             return {"success": False, "error": "Request to Astro CMS timed out"}
         except httpx.RequestError as e:
-            return {"success": False, "error": f"Network error: {str(e)}"}
+            return {**tool_error(e, "updating post"), "success": False}
 
     async def delete_post(
         self,
@@ -177,7 +179,7 @@ class AstroBridge:
         except httpx.TimeoutException:
             return {"success": False, "error": "Request to Astro CMS timed out"}
         except httpx.RequestError as e:
-            return {"success": False, "error": f"Network error: {str(e)}"}
+            return {**tool_error(e, "deleting post"), "success": False}
 
     async def get_analytics(
         self,
@@ -215,7 +217,7 @@ class AstroBridge:
         except httpx.TimeoutException:
             return {"success": False, "error": "Request to Astro CMS timed out"}
         except httpx.RequestError as e:
-            return {"success": False, "error": f"Network error: {str(e)}"}
+            return {**tool_error(e, "fetching analytics"), "success": False}
 
 
 # Singleton instance

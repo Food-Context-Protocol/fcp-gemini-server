@@ -1,7 +1,8 @@
 """Tests for MCP SSE server (server_sse.py)."""
 
 import os
-from unittest.mock import MagicMock, patch
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -104,6 +105,19 @@ class TestGetSseUser:
             result = get_sse_user("Bearer custom-user-id")
             assert result.user_id == "custom-user-id"
             assert result.role.value == UserRole.AUTHENTICATED.value
+
+    def test_get_sse_user_no_fcp_token_production_returns_demo(self):
+        from fcp.server_sse import get_sse_user
+
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("fcp.settings.settings") as mock_settings,
+        ):
+            mock_settings.is_production = True
+            os.environ.pop("FCP_TOKEN", None)
+            result = get_sse_user("Bearer any-token")
+            assert result.user_id == DEMO_USER_ID
+            assert result.role.value == UserRole.DEMO.value
 
 
 class TestHealthEndpoint:
@@ -223,6 +237,41 @@ class TestMCPServerIntegration:
             user_arg = mock_dispatch.call_args[0][2]
             assert user_arg.user_id == "admin"
             assert user_arg.role.value == UserRole.AUTHENTICATED.value
+
+
+class TestHandleSSE:
+    """Tests for handle_sse ASGI endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_handle_sse_connects_and_runs(self):
+        from fcp.server_sse import handle_sse
+
+        mock_streams = (AsyncMock(), AsyncMock())
+
+        @asynccontextmanager
+        async def fake_connect_sse(scope, receive, send):
+            yield mock_streams
+
+        mock_request = MagicMock()
+        mock_request.scope = {}
+        mock_request.receive = AsyncMock()
+        mock_request._send = AsyncMock()
+
+        with (
+            patch("fcp.server_sse.sse_transport") as mock_transport,
+            patch("fcp.server_sse.mcp_server") as mock_server,
+        ):
+            mock_transport.connect_sse = fake_connect_sse
+            mock_server.run = AsyncMock()
+            mock_server.create_initialization_options.return_value = {}
+
+            await handle_sse(mock_request)
+
+            mock_server.run.assert_called_once_with(
+                mock_streams[0],
+                mock_streams[1],
+                {},
+            )
 
 
 class TestAppConfiguration:
