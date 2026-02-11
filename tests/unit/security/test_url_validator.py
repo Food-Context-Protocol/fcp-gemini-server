@@ -13,6 +13,7 @@ from fcp.security.url_validator import (
     ImageURLError,
     _is_ip_blocked,
     _is_production,
+    validate_browser_url,
     validate_content_type,
     validate_image_url,
 )
@@ -493,6 +494,84 @@ class TestVerifyUrlReachability:
             assert result is False
             # Verify stream was never called (no fallback for 500)
             mock_client.stream.assert_not_called()
+
+
+class TestValidateBrowserUrl:
+    """Tests for validate_browser_url (SSRF protection for browser automation)."""
+
+    def test_allows_valid_https_url(self):
+        assert validate_browser_url("https://example.com/recipe") == "https://example.com/recipe"
+
+    def test_allows_valid_http_url(self):
+        assert validate_browser_url("http://example.com/recipe") == "http://example.com/recipe"
+
+    def test_allows_arbitrary_domains(self):
+        """Unlike validate_image_url, browser URLs allow any domain."""
+        assert validate_browser_url("https://www.seriouseats.com/recipe") == "https://www.seriouseats.com/recipe"
+
+    def test_rejects_empty_url(self):
+        with pytest.raises(ImageURLError, match="URL is required"):
+            validate_browser_url("")
+
+    def test_rejects_none_url(self):
+        with pytest.raises(ImageURLError, match="URL is required"):
+            validate_browser_url(None)
+
+    def test_rejects_file_scheme(self):
+        with pytest.raises(ImageURLError, match="file://"):
+            validate_browser_url("file:///etc/passwd")
+
+    def test_rejects_data_scheme(self):
+        with pytest.raises(ImageURLError, match="data:"):
+            validate_browser_url("data:text/html,<h1>hi</h1>")
+
+    def test_rejects_ftp_scheme(self):
+        with pytest.raises(ImageURLError, match="ftp://"):
+            validate_browser_url("ftp://evil.com/file")
+
+    def test_rejects_javascript_scheme(self):
+        with pytest.raises(ImageURLError, match="javascript:"):
+            validate_browser_url("javascript:alert(1)")
+
+    def test_rejects_metadata_google_internal(self):
+        with pytest.raises(ImageURLError, match="not allowed"):
+            validate_browser_url("http://metadata.google.internal/computeMetadata/v1/")
+
+    def test_rejects_aws_metadata_ip(self):
+        with pytest.raises(ImageURLError, match="not allowed"):
+            validate_browser_url("http://169.254.169.254/latest/meta-data/")
+
+    def test_rejects_private_ip_10(self):
+        with pytest.raises(ImageURLError, match="private/internal"):
+            validate_browser_url("http://10.0.0.1/admin")
+
+    def test_rejects_private_ip_192(self):
+        with pytest.raises(ImageURLError, match="private/internal"):
+            validate_browser_url("http://192.168.1.1/admin")
+
+    def test_rejects_loopback_ip(self):
+        with pytest.raises(ImageURLError, match="private/internal"):
+            validate_browser_url("http://127.0.0.1/admin")
+
+    def test_rejects_credentials_in_url(self):
+        with pytest.raises(ImageURLError, match="credentials"):
+            validate_browser_url("https://user@example.com/recipe")
+
+    def test_rejects_no_hostname(self):
+        with pytest.raises(ImageURLError, match="hostname"):
+            validate_browser_url("https://")
+
+    def test_rejects_invalid_scheme(self):
+        with pytest.raises(ImageURLError, match="scheme must be"):
+            validate_browser_url("gopher://example.com/recipe")
+
+    def test_strips_whitespace(self):
+        assert validate_browser_url("  https://example.com/recipe  ") == "https://example.com/recipe"
+
+    def test_urlparse_exception(self):
+        with patch("fcp.security.url_validator.urlparse", side_effect=Exception("Parse failed")):
+            with pytest.raises(ImageURLError, match="Invalid URL format"):
+                validate_browser_url("https://example.com/recipe")
 
 
 class TestUrlParseException:

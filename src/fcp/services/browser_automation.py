@@ -9,6 +9,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from fcp.security.url_validator import validate_browser_url
+
 
 class BrowserAction(BaseModel):
     """An action to perform in the browser."""
@@ -63,6 +65,9 @@ class BrowserAutomationService:
         Returns:
             Extracted recipe with ingredients, instructions, etc.
         """
+        # Validate URL before launching browser to prevent SSRF
+        validate_browser_url(url)
+
         from playwright.async_api import async_playwright
 
         async with async_playwright() as p:
@@ -70,7 +75,6 @@ class BrowserAutomationService:
             self.page = await self.browser.new_page(viewport={"width": self.SCREEN_WIDTH, "height": self.SCREEN_HEIGHT})
 
             try:
-                # Navigate to the URL
                 await self.page.goto(url, wait_until="networkidle")
 
                 # Run the extraction agent loop
@@ -263,6 +267,7 @@ Current page screenshot is attached."""
 
             case "navigate":
                 if action.url:
+                    validate_browser_url(action.url)
                     await self.page.goto(action.url)
 
             case "key_combination":

@@ -206,6 +206,54 @@ def validate_content_type(content_type: str | None) -> bool:
     return base_type in ALLOWED_CONTENT_TYPES
 
 
+def validate_browser_url(url: str) -> str:
+    """Validate a URL for browser automation to prevent SSRF.
+
+    Similar to validate_image_url but without domain allowlisting,
+    since browser automation needs to visit arbitrary recipe websites.
+
+    Args:
+        url: The URL to validate
+
+    Returns:
+        The validated URL
+
+    Raises:
+        ImageURLError: If URL fails validation
+    """
+    if not url or not isinstance(url, str):
+        raise ImageURLError("URL is required")
+
+    url = url.strip()
+
+    for scheme in ("file://", "data:", "ftp://", "javascript:"):
+        if url.lower().startswith(scheme):
+            raise ImageURLError(f"{scheme} URLs are not allowed")
+
+    try:
+        parsed = urlparse(url)
+    except Exception as e:
+        raise ImageURLError("Invalid URL format") from e
+
+    if parsed.scheme.lower() not in {"https", "http"}:
+        raise ImageURLError(f"URL scheme must be http or https, got: {parsed.scheme}")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ImageURLError("URL must have a hostname")
+
+    if hostname.lower() in BLOCKED_HOSTNAMES:
+        raise ImageURLError(f"Access to {hostname} is not allowed")
+
+    if _is_ip_blocked(hostname):
+        raise ImageURLError("Access to private/internal IP addresses is not allowed")
+
+    if re.search(r"[@]", parsed.netloc):
+        raise ImageURLError("URLs with credentials are not allowed")
+
+    return url
+
+
 async def verify_url_reachability(url: str, timeout: float = 5.0) -> bool:
     """
     Verify that a URL is reachable and returns a valid image.
