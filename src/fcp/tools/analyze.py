@@ -9,8 +9,10 @@ tool definitions, while JSON mode is simpler and works well for
 straightforward analysis.
 """
 
+import base64
 from typing import Any
 
+from fcp.mcp.registry import tool
 from fcp.prompts import PROMPTS
 from fcp.services.gemini import gemini
 from fcp.tools.function_definitions import FOOD_ANALYSIS_TOOLS
@@ -76,6 +78,20 @@ async def analyze_meal_from_bytes(image_bytes: bytes, mime_type: str) -> dict[st
         image_mime_type=mime_type,
     )
     return _normalize_analysis_result(result)
+
+
+@tool(
+    name="dev.fcp.media.analyze_meal_from_bytes",
+    description="Analyze a meal image from base64-encoded bytes",
+    category="media",
+)
+async def analyze_meal_from_bytes_tool(
+    image_data: str,
+    mime_type: str = "image/jpeg",
+) -> dict[str, Any]:
+    """MCP wrapper for byte-based meal analysis."""
+    raw_bytes = base64.b64decode(image_data)
+    return await analyze_meal_from_bytes(raw_bytes, mime_type)
 
 
 async def analyze_meal_v2(image_url: str) -> dict[str, Any]:
