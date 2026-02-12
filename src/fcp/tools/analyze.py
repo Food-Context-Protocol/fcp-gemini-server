@@ -81,6 +81,16 @@ async def analyze_meal_from_bytes(image_bytes: bytes, mime_type: str) -> dict[st
 
 
 @tool(
+    name="dev.fcp.media.analyze_meal",
+    description="Analyze a meal image from URL",
+    category="media",
+)
+async def analyze_meal_tool(image_url: str) -> dict[str, Any]:
+    """MCP wrapper for URL-based meal analysis."""
+    return await analyze_meal(image_url)
+
+
+@tool(
     name="dev.fcp.media.analyze_meal_from_bytes",
     description="Analyze a meal image from base64-encoded bytes",
     category="media",
