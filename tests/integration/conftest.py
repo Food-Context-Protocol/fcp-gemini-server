@@ -1,10 +1,14 @@
 """Integration test fixtures.
 
-This module provides fixtures for integration tests that require
-external services (Gemini API).
+This module provides fixtures for integration tests across three lanes:
+- core: backend-agnostic integration checks (sqlite by default)
+- gemini: Gemini-dependent tests (requires GEMINI_API_KEY)
+- external: external-provider tests (USDA/FDA/maps/places), opt-in
 
 Prerequisites:
-    - .env file with GEMINI_API_KEY
+    - RUN_INTEGRATION=1
+    - GEMINI_API_KEY only for tests marked `gemini`
+    - RUN_EXTERNAL_INTEGRATION=1 for tests marked `external`
 
 Authentication approach:
     Integration tests use FastAPI dependency overrides to bypass auth.

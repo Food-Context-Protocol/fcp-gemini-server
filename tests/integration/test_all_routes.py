@@ -1,11 +1,11 @@
 """Integration tests for all API routes.
 
 These tests verify that all routes are accessible with proper authentication.
-They require Firebase emulators to be running.
+Firestore-marked tests require Firebase emulators to be running.
 
 Run with:
     firebase emulators:start --only firestore,auth &
-    pytest tests/integration/test_all_routes.py -v
+    RUN_INTEGRATION=1 RUN_EXTERNAL_INTEGRATION=1 pytest tests/integration/test_all_routes.py -v
 """
 
 import pytest
