@@ -14,15 +14,18 @@ This repo follows Google-style test hygiene: small, deterministic, and hermetic 
 - `medium`: heavier unit tests or property-based tests.
 - `large`: integration/e2e tests.
 - `integration`: requires external services or emulators.
+- `core`: backend-agnostic integration checks (sqlite-friendly).
+- `gemini`: tests that require Gemini capabilities.
+- `external`: tests that touch external providers (USDA/FDA/maps/places).
 
 ## Running Integration Tests
 Run explicitly with markers:
 ```bash
-uv run pytest tests/integration/ -m "integration"
+RUN_INTEGRATION=1 DATABASE_BACKEND=sqlite uv run pytest tests/integration/ -m "core and integration"
 ```
 Or use:
 ```bash
-make test-integration
+make test-integration-core
 ```
 
 ## Size Enforcement
