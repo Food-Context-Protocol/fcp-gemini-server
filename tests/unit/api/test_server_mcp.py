@@ -20,10 +20,13 @@ import fcp.tools.crud
 import fcp.tools.discovery
 import fcp.tools.flavor
 import fcp.tools.inventory
+import fcp.tools.knowledge_graph
 import fcp.tools.parser
 import fcp.tools.profile
 import fcp.tools.recipe_crud
 import fcp.tools.recipe_extractor
+import fcp.tools.recipe_generator
+import fcp.tools.research
 import fcp.tools.safety
 import fcp.tools.scaling
 import fcp.tools.search
@@ -32,6 +35,7 @@ import fcp.tools.standardize
 import fcp.tools.suggest
 import fcp.tools.taste_buddy
 import fcp.tools.trends
+import fcp.tools.video
 import fcp.tools.visual
 from fcp.auth.permissions import AuthenticatedUser, UserRole
 
@@ -65,10 +69,13 @@ def ensure_tools_registered():
             fcp.tools.discovery,
             fcp.tools.flavor,
             fcp.tools.inventory,
+            fcp.tools.knowledge_graph,
             fcp.tools.parser,
             fcp.tools.profile,
             fcp.tools.recipe_crud,
             fcp.tools.recipe_extractor,
+            fcp.tools.recipe_generator,
+            fcp.tools.research,
             fcp.tools.safety,
             fcp.tools.scaling,
             fcp.tools.search,
@@ -77,6 +84,7 @@ def ensure_tools_registered():
             fcp.tools.suggest,
             fcp.tools.taste_buddy,
             fcp.tools.trends,
+            fcp.tools.video,
             fcp.tools.visual,
         ]
         for module in modules:
@@ -234,6 +242,12 @@ class TestListTools:
         assert "dev.fcp.nutrition.get_recent_meals" in tool_names
         assert "dev.fcp.nutrition.search_meals" in tool_names
         assert "dev.fcp.nutrition.add_meal" in tool_names
+        assert "dev.fcp.inventory.list_pantry" in tool_names
+        assert "dev.fcp.media.analyze_meal" in tool_names
+        assert "dev.fcp.recipes.generate_recipe" in tool_names
+        assert "dev.fcp.research.generate_report" in tool_names
+        assert "dev.fcp.knowledge.search" in tool_names
+        assert "dev.fcp.publishing.generate_recipe_video" in tool_names
 
 
 class TestListResources:
@@ -1679,3 +1693,107 @@ class TestDemoModeWritePermissionDenied:
             result = await call_tool("dev.fcp.inventory.update_pantry_item", {"item_id": "item-123", "quantity": 5})
             data = json.loads(result[0].text)
             assert data["error"] == "write_permission_denied"
+
+
+class TestMissingToolParity:
+    """Tests for newly exposed MCP tool names used by fcp-app."""
+
+    @pytest.mark.asyncio
+    async def test_call_tool_media_analyze_meal(self):
+        """dev.fcp.media.analyze_meal dispatches through wrapper."""
+        from fcp.server import call_tool
+
+        with (
+            patch("fcp.server.check_mcp_rate_limit"),
+            patch("fcp.server.get_user_id", return_value=MOCK_USER),
+            patch("fcp.tools.analyze.analyze_meal", new=AsyncMock(return_value={"dish_name": "Ramen"})),
+        ):
+            result = await call_tool("dev.fcp.media.analyze_meal", {"image_url": "https://example.com/meal.jpg"})
+            data = json.loads(result[0].text)
+            assert data["dish_name"] == "Ramen"
+
+    @pytest.mark.asyncio
+    async def test_call_tool_inventory_list_pantry(self, mock_firestore_client):
+        """dev.fcp.inventory.list_pantry returns stable response shape."""
+        from fcp.server import call_tool
+
+        mock_firestore_client.get_pantry.return_value = [{"id": "p1", "name": "Eggs"}]
+
+        with (
+            patch("fcp.server.check_mcp_rate_limit"),
+            patch("fcp.server.get_user_id", return_value=MOCK_USER),
+        ):
+            result = await call_tool("dev.fcp.inventory.list_pantry", {})
+            data = json.loads(result[0].text)
+            assert data["count"] == 1
+            assert data["items"][0]["name"] == "Eggs"
+
+    @pytest.mark.asyncio
+    async def test_call_tool_recipes_generate_recipe_with_prompt(self):
+        """dev.fcp.recipes.generate_recipe accepts prompt-only payloads."""
+        from fcp.server import call_tool
+
+        with (
+            patch("fcp.server.check_mcp_rate_limit"),
+            patch("fcp.server.get_user_id", return_value=MOCK_USER),
+            patch("fcp.tools.recipe_generator.generate_recipe", new=AsyncMock(return_value={"recipe_name": "Prompt Pie"})),
+        ):
+            result = await call_tool("dev.fcp.recipes.generate_recipe", {"prompt": "easy pasta for dinner"})
+            data = json.loads(result[0].text)
+            assert data["recipe_name"] == "Prompt Pie"
+
+    @pytest.mark.asyncio
+    async def test_call_tool_research_generate_report(self):
+        """dev.fcp.research.generate_report dispatches through wrapper."""
+        from fcp.server import call_tool
+
+        with (
+            patch("fcp.server.check_mcp_rate_limit"),
+            patch("fcp.server.get_user_id", return_value=MOCK_USER),
+            patch(
+                "fcp.tools.research.generate_research_report",
+                new=AsyncMock(return_value={"status": "completed", "report": "ok"}),
+            ),
+        ):
+            result = await call_tool("dev.fcp.research.generate_report", {"topic": "fiber intake"})
+            data = json.loads(result[0].text)
+            assert data["status"] == "completed"
+
+    @pytest.mark.asyncio
+    async def test_call_tool_knowledge_search(self):
+        """dev.fcp.knowledge.search dispatches through wrapper."""
+        from fcp.server import call_tool
+
+        with (
+            patch("fcp.server.check_mcp_rate_limit"),
+            patch("fcp.server.get_user_id", return_value=MOCK_USER),
+            patch(
+                "fcp.tools.knowledge_graph.search_knowledge",
+                new=AsyncMock(return_value={"combined_count": 2, "usda": [], "off": []}),
+            ),
+        ):
+            result = await call_tool("dev.fcp.knowledge.search", {"query": "avocado"})
+            data = json.loads(result[0].text)
+            assert data["combined_count"] == 2
+
+    @pytest.mark.asyncio
+    async def test_call_tool_publishing_generate_recipe_video(self):
+        """dev.fcp.publishing.generate_recipe_video resolves recipe_id input."""
+        from fcp.server import call_tool
+
+        mock_db = AsyncMock()
+        mock_db.get_recipe.return_value = {"name": "Spaghetti"}
+
+        with (
+            patch("fcp.server.check_mcp_rate_limit"),
+            patch("fcp.server.get_user_id", return_value=MOCK_USER),
+            patch("fcp.tools.video.get_firestore_client", return_value=mock_db),
+            patch(
+                "fcp.tools.video.generate_recipe_video",
+                new=AsyncMock(return_value={"status": "completed"}),
+            ),
+        ):
+            result = await call_tool("dev.fcp.publishing.generate_recipe_video", {"recipe_id": "r1"})
+            data = json.loads(result[0].text)
+            assert data["status"] == "completed"
+            assert data["recipe_id"] == "r1"

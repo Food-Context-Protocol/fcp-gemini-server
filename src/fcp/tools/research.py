@@ -6,6 +6,7 @@ research reports on food-related topics.
 
 from typing import Any
 
+from fcp.mcp.registry import tool
 from fcp.services.gemini import gemini
 
 
@@ -48,3 +49,21 @@ async def generate_research_report(
     result["topic"] = topic
 
     return result
+
+
+@tool(
+    name="dev.fcp.research.generate_report",
+    description="Generate a deep research report for a food topic",
+    category="research",
+)
+async def generate_report_tool(
+    topic: str,
+    context: str | None = None,
+    timeout_seconds: int = 300,
+) -> dict[str, Any]:
+    """MCP wrapper for deep research report generation."""
+    return await generate_research_report(
+        topic=topic,
+        context=context,
+        timeout_seconds=timeout_seconds,
+    )

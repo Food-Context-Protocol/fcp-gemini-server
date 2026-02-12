@@ -131,6 +131,17 @@ async def add_to_pantry(user_id: str, items: list[str]) -> list[str]:
     return await firestore_client.update_pantry_items_batch(user_id, items_data)
 
 
+@tool(
+    name="dev.fcp.inventory.list_pantry",
+    description="List pantry items for the authenticated user",
+    category="inventory",
+)
+async def list_pantry(user_id: str) -> dict[str, Any]:
+    """List pantry items with a stable response shape."""
+    items = await firestore_client.get_pantry(user_id)
+    return {"items": items, "count": len(items)}
+
+
 async def deduct_from_pantry(
     user_id: str,
     ingredients: list[str],
