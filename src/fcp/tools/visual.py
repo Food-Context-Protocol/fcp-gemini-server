@@ -69,21 +69,30 @@ async def generate_food_image(
     ar_enum = ar_map.get(aspect_ratio, AspectRatio.STANDARD)
     res_enum = res_map.get(resolution, Resolution.HIGH)
 
-    result = await service.generate_food_image(
-        dish_name=dish_name,
-        cuisine=cuisine,
-        style=style,
-        aspect_ratio=ar_enum,
-        resolution=res_enum,
-    )
-
-    return {
-        "image_base64": base64.b64encode(result.image_bytes).decode("utf-8"),
-        "mime_type": result.mime_type,
-        "aspect_ratio": result.aspect_ratio.value,
-        "resolution": result.resolution.value,
-        "dish_name": dish_name,
-    }
+    try:
+        result = await service.generate_food_image(
+            dish_name=dish_name,
+            cuisine=cuisine,
+            style=style,
+            aspect_ratio=ar_enum,
+            resolution=res_enum,
+        )
+        return {
+            "image_base64": base64.b64encode(result.image_bytes).decode("utf-8"),
+            "mime_type": result.mime_type,
+            "aspect_ratio": result.aspect_ratio.value,
+            "resolution": result.resolution.value,
+            "dish_name": dish_name,
+        }
+    except Exception as exc:
+        logger.exception("Error generating food image")
+        return {
+            "status": "failed",
+            "error": str(exc),
+            "dish_name": dish_name,
+            "aspect_ratio": ar_enum.value,
+            "resolution": res_enum.value,
+        }
 
 
 @tool(

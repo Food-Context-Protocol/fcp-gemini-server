@@ -17,6 +17,8 @@ import os
 
 import pytest
 
+pytestmark = [pytest.mark.integration]
+
 # Skip marker for tests requiring Gemini API
 requires_gemini = pytest.mark.skipif(not os.getenv("GEMINI_API_KEY"), reason="GEMINI_API_KEY not set")
 
@@ -42,13 +44,6 @@ def reset_gemini_singleton():
     # Clean up after test
     gemini_module._gemini_client = None
     GeminiClient.reset_http_client()
-
-
-# Skip marker for tests requiring Firestore
-requires_firestore = pytest.mark.skipif(
-    not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
-    reason="GOOGLE_APPLICATION_CREDENTIALS not set",
-)
 
 
 class TestFoodImageWorkflow:
@@ -118,7 +113,8 @@ class TestDiscoveryWorkflow:
     3. Generates personalized recommendations
     """
 
-    @requires_firestore
+    @pytest.mark.integration
+    @pytest.mark.core
     @pytest.mark.asyncio
     async def test_taste_profile_analysis(self):
         """
@@ -222,7 +218,8 @@ class TestMealCRUDWorkflow:
     Story: User creates, reads, updates, and deletes meals.
     """
 
-    @requires_firestore
+    @pytest.mark.integration
+    @pytest.mark.core
     @pytest.mark.asyncio
     async def test_meal_lifecycle(self):
         """
@@ -507,3 +504,10 @@ class TestVoiceAndResearch:
         assert "status" in result
         # Accept completed, timeout, or failed (API can be flaky)
         assert result["status"] in ("completed", "timeout", "failed")
+    pytestmark = [pytest.mark.gemini]
+    pytestmark = [pytest.mark.core]
+    pytestmark = [pytest.mark.gemini]
+    pytestmark = [pytest.mark.core]
+    pytestmark = [pytest.mark.gemini]
+    pytestmark = [pytest.mark.gemini]
+    pytestmark = [pytest.mark.gemini]

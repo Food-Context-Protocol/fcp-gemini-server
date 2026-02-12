@@ -7,6 +7,7 @@ The USDA_API_KEY environment variable is optional. When not set,
 all functions gracefully return empty results.
 """
 
+import logging
 import os
 from typing import Any
 
@@ -14,6 +15,7 @@ import httpx
 
 USDA_API_BASE = "https://api.nal.usda.gov/fdc/v1"
 DEFAULT_TIMEOUT = 10.0
+logger = logging.getLogger(__name__)
 
 
 def _get_api_key() -> str | None:
@@ -47,7 +49,11 @@ async def search_foods(query: str, page_size: int = 5) -> list[dict[str, Any]]:
                 },
             )
             if response.status_code == 200:
-                data = response.json()
+                try:
+                    data = response.json()
+                except ValueError:
+                    logger.warning("USDA search returned non-JSON response for query=%r", query)
+                    return []
                 return data.get("foods", [])
     except httpx.TimeoutException:
         # Graceful degradation: return empty results on timeout
@@ -80,7 +86,11 @@ async def get_food_details(fdc_id: int) -> dict[str, Any]:
                 params={"api_key": api_key},
             )
             if response.status_code == 200:
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError:
+                    logger.warning("USDA food details returned non-JSON response for fdc_id=%r", fdc_id)
+                    return {}
     except httpx.TimeoutException:
         # Graceful degradation: return empty dict on timeout
         pass

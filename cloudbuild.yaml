@@ -4,7 +4,10 @@ steps:
     entrypoint: /bin/bash
     args:
       - '-c'
-      - 'uv sync --frozen --no-install-project && uv run pytest tests/unit -q --tb=short'
+      - |
+        uv sync --frozen --no-install-project && \
+        uv run pytest tests/unit -q --tb=short && \
+        RUN_INTEGRATION=1 DATABASE_BACKEND=sqlite uv run pytest -q --tb=short -m "core and integration" tests/integration
 
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'

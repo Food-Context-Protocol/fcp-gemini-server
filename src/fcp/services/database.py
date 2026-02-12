@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS food_logs (
     occasion TEXT,
     ai_notes TEXT,
     foodon TEXT,
+    donated INTEGER DEFAULT 0,
+    donation_organization TEXT,
     public INTEGER DEFAULT 0,
     created_at TEXT,
     updated_at TEXT,
@@ -193,7 +195,20 @@ class Database:
         self._db = await aiosqlite.connect(self._db_path)
         self._db.row_factory = aiosqlite.Row
         await self._db.executescript(_CREATE_TABLES)
+        await self._migrate_food_logs_columns()
         await self._db.commit()
+
+    async def _migrate_food_logs_columns(self) -> None:
+        """Ensure newer food_logs columns exist on pre-existing databases."""
+        columns: set[str] = set()
+        async with self.db.execute("PRAGMA table_info(food_logs)") as cursor:
+            async for row in cursor:
+                columns.add(row["name"])
+
+        if "donated" not in columns:
+            await self.db.execute("ALTER TABLE food_logs ADD COLUMN donated INTEGER DEFAULT 0")
+        if "donation_organization" not in columns:
+            await self.db.execute("ALTER TABLE food_logs ADD COLUMN donation_organization TEXT")
 
     async def close(self) -> None:
         """Close DB connection."""
