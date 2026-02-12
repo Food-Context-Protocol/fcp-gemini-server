@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from fcp.mcp.registry import tool
 from fcp.services.gemini import gemini
 
 logger = logging.getLogger(__name__)
@@ -98,3 +99,38 @@ async def generate_recipe(
     except Exception as e:
         logger.error("Recipe generation failed: %s", e)
         raise
+
+
+@tool(
+    name="dev.fcp.recipes.generate_recipe",
+    description="Generate a recipe from ingredients or a free-form prompt",
+    category="recipes",
+)
+async def generate_recipe_tool(
+    ingredients: list[str] | None = None,
+    prompt: str | None = None,
+    dish_name: str | None = None,
+    cuisine: str | None = None,
+    dietary_restrictions: str | None = None,
+) -> dict[str, Any]:
+    """MCP wrapper for recipe generation with prompt compatibility."""
+    ingredient_list = ingredients
+
+    if ingredient_list is None:
+        ingredient_list = []
+
+    if prompt and not ingredient_list:
+        ingredient_list = [prompt]
+
+    if not ingredient_list:
+        return {
+            "success": False,
+            "error": "Provide either ingredients or prompt",
+        }
+
+    return await generate_recipe(
+        ingredients=ingredient_list,
+        dish_name=dish_name,
+        cuisine=cuisine,
+        dietary_restrictions=dietary_restrictions,
+    )

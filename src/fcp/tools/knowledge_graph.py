@@ -11,6 +11,7 @@ import re
 from datetime import UTC, datetime
 from typing import Any
 
+from fcp.mcp.registry import tool
 from fcp.services.firestore import get_firestore_client
 from fcp.services.gemini import gemini
 from fcp.tools.external import open_food_facts as off
@@ -230,6 +231,16 @@ async def search_knowledge(
         ],
         "combined_count": len(usda_results) + len(off_results),
     }
+
+
+@tool(
+    name="dev.fcp.knowledge.search",
+    description="Search food knowledge across USDA and Open Food Facts",
+    category="knowledge",
+)
+async def search_knowledge_tool(query: str) -> dict[str, Any]:
+    """MCP wrapper for knowledge search."""
+    return await search_knowledge(query)
 
 
 async def compare_foods(

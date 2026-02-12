@@ -6,6 +6,8 @@ and food-related content.
 
 from typing import Any
 
+from fcp.mcp.registry import tool
+from fcp.services.firestore import get_firestore_client
 from fcp.services.gemini import gemini
 
 # Style prompts for different video types
@@ -107,4 +109,49 @@ async def generate_cooking_clip(
     result["action"] = action
     result["ingredients"] = ingredients
 
+    return result
+
+
+@tool(
+    name="dev.fcp.publishing.generate_recipe_video",
+    description="Generate a short recipe video from recipe ID or dish name",
+    category="publishing",
+)
+async def generate_recipe_video_tool(
+    recipe_id: str | None = None,
+    dish_name: str | None = None,
+    description: str | None = None,
+    style: str = "cinematic",
+    duration_seconds: int = 8,
+    aspect_ratio: str = "16:9",
+    timeout_seconds: int = 300,
+    user_id: str | None = None,
+) -> dict[str, Any]:
+    """MCP wrapper for recipe video generation with app-compatible arguments."""
+    resolved_dish_name = dish_name
+
+    if resolved_dish_name is None and recipe_id and user_id:
+        db = get_firestore_client()
+        recipe = await db.get_recipe(user_id, recipe_id)
+        if recipe:
+            resolved_dish_name = recipe.get("name") or recipe.get("recipe_name")
+            if description is None:
+                description = recipe.get("description")
+
+    if not resolved_dish_name:
+        return {
+            "success": False,
+            "error": "Provide dish_name or a valid recipe_id",
+        }
+
+    result = await generate_recipe_video(
+        dish_name=resolved_dish_name,
+        description=description,
+        style=style,
+        duration_seconds=duration_seconds,
+        aspect_ratio=aspect_ratio,
+        timeout_seconds=timeout_seconds,
+    )
+    if recipe_id is not None:
+        result["recipe_id"] = recipe_id
     return result
