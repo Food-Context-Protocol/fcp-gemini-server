@@ -306,12 +306,10 @@ class TestCallTool:
                 "fcp.tools.crud.get_meals", new=AsyncMock(return_value=[{"dish_name": "Pasta", "cuisine": "Italian"}])
             ),
         ):
-            # Use short name to test legacy handler, which wraps in {"meals": ...}
-            result = await call_tool("get_recent_meals", {"limit": 5, "days": 3})
+            result = await call_tool("dev.fcp.nutrition.get_recent_meals", {"limit": 5, "days": 3})
 
             assert len(result) == 1
             data = json.loads(result[0].text)
-            # Legacy handler wraps response in {"meals": [...]}
             assert "meals" in data
             assert len(data["meals"]) == 1
             assert data["meals"][0]["dish_name"] == "Pasta"

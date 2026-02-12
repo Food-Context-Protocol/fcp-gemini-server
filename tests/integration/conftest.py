@@ -1,10 +1,14 @@
 """Integration test fixtures.
 
-This module provides fixtures for integration tests that require
-external services (Gemini API).
+This module provides fixtures for integration tests across three lanes:
+- core: backend-agnostic integration checks (sqlite by default)
+- gemini: Gemini-dependent tests (requires GEMINI_API_KEY)
+- external: external-provider tests (USDA/FDA/maps/places), opt-in
 
 Prerequisites:
-    - .env file with GEMINI_API_KEY
+    - RUN_INTEGRATION=1
+    - GEMINI_API_KEY only for tests marked `gemini`
+    - RUN_EXTERNAL_INTEGRATION=1 for tests marked `external`
 
 Authentication approach:
     Integration tests use FastAPI dependency overrides to bypass auth.
@@ -77,6 +81,9 @@ def pytest_configure(config):
     if os.environ.get("GEMINI_API_KEY") == "test-api-key":
         os.environ.pop("GEMINI_API_KEY", None)
 
+    # Default integration backend to sqlite unless explicitly overridden.
+    os.environ.setdefault("DATABASE_BACKEND", "sqlite")
+
 
 def pytest_collection_modifyitems(config, items):
     """Skip integration tests unless explicitly enabled."""
@@ -89,23 +96,39 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(autouse=True)
-def skip_integration_if_missing_deps():
-    """Skip tests early when required credentials are absent."""
+def skip_integration_if_missing_deps(request: pytest.FixtureRequest):
+    """Skip tests early when required credentials are absent.
+
+    Marker-aware behavior:
+    - `@pytest.mark.gemini` tests require GEMINI_API_KEY
+    - non-gemini integration tests can run without Gemini credentials
+    """
     if os.getenv("RUN_INTEGRATION") != "1":
         return
 
-    missing = []
     gemini_key = os.environ.get("GEMINI_API_KEY")
-    if not gemini_key:
-        missing.append("GEMINI_API_KEY")
-
-    if missing:
-        msg = f"Skipping integration test because {', '.join(missing)} {'is' if len(missing) == 1 else 'are'} not configured"
+    if "gemini" in request.keywords and not gemini_key:
+        msg = "Skipping gemini integration test because GEMINI_API_KEY is not configured"
         logger.warning(msg)
+        pytest.skip(msg)
+    if "external" in request.keywords and os.getenv("RUN_EXTERNAL_INTEGRATION") != "1":
+        msg = "Skipping external integration test because RUN_EXTERNAL_INTEGRATION != 1"
+        logger.info(msg)
         pytest.skip(msg)
 
     os.environ["GOOGLE_CLOUD_PROJECT"] = TEST_PROJECT_ID
     os.environ["DEMO_MODE"] = "false"
+
+
+@pytest.fixture(autouse=True)
+def require_firestore_emulator_for_firestore_tests(request: pytest.FixtureRequest):
+    """Only require Firebase emulators for tests explicitly marked firestore."""
+    if os.getenv("RUN_INTEGRATION") != "1":
+        return
+    if "firestore" not in request.keywords:
+        return
+    request.getfixturevalue("firebase_emulator_env")
+    request.getfixturevalue("clear_firestore")
 
 
 @pytest.fixture(autouse=True)
@@ -196,12 +219,12 @@ def auth_headers() -> dict[str, str]:
 
 
 @pytest.fixture
-async def integration_client(firebase_emulator_env: dict[str, str], clear_firestore: None):
+async def integration_client():
     """Create an async test client for integration tests.
 
     This fixture creates a test client with authentication bypassed via
-    dependency overrides. This allows testing API routes without relying
-    on Firebase SDK's emulator integration.
+    dependency overrides. Firestore emulator setup is only required for
+    tests marked with `@pytest.mark.firestore`.
     """
     from httpx import ASGITransport, AsyncClient
 

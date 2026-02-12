@@ -1,22 +1,16 @@
-"""Integration tests for donate_meal (requires Firestore credentials)."""
-
-import os
+"""Core integration tests for donate_meal workflow."""
 
 import pytest
 
-requires_firestore = pytest.mark.skipif(
-    not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
-    reason="GOOGLE_APPLICATION_CREDENTIALS not set",
-)
-
 
 class TestDonateMealIntegration:
-    """Integration tests for donate_meal (requires Firestore credentials)."""
+    """Core integration tests for donate_meal workflow."""
 
-    @requires_firestore
+    @pytest.mark.integration
+    @pytest.mark.core
     @pytest.mark.asyncio
     async def test_donate_meal_success(self):
-        """Test successful meal donation with real Firestore."""
+        """Test successful meal donation via active DB backend."""
         from fcp.tools import add_meal, donate_meal
 
         user_id = "test-donate-user"

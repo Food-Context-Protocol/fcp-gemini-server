@@ -304,8 +304,14 @@ make test
 # Run specific test file
 pytest tests/unit/tools/test_nutrition.py -v
 
-# Run integration tests (requires services)
-RUN_INTEGRATION=1 pytest tests/integration/
+# Run core integration tests (backend-agnostic, sqlite)
+RUN_INTEGRATION=1 DATABASE_BACKEND=sqlite pytest tests/integration/ -m "core and integration"
+
+# Run external integration tests (USDA/FDA/maps/places), opt-in
+RUN_INTEGRATION=1 RUN_EXTERNAL_INTEGRATION=1 DATABASE_BACKEND=sqlite pytest tests/integration/ -m "external and integration"
+
+# Run full integration suite
+RUN_INTEGRATION=1 RUN_EXTERNAL_INTEGRATION=1 DATABASE_BACKEND=sqlite pytest tests/integration/
 
 # Watch mode during development
 pytest-watch

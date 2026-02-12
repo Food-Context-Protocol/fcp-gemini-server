@@ -137,6 +137,7 @@ markers = [
     "medium: tests that may touch filesystem or heavier fixtures",
     "large: slow tests (integration/e2e)",
     "integration: tests that require external services or emulators",
+    "core: backend-agnostic integration tests that should run in CI without Firestore credentials",
     "e2e: end-to-end tests",
     "slow: explicitly slow tests",
     "property: property-based tests",
@@ -144,6 +145,7 @@ markers = [
     "network: tests that require network access",
     "gemini: tests that exercise Gemini-backed features",
     "firestore: tests that require Firestore/database access",
+    "external: tests that exercise external provider APIs (USDA/FDA/maps/places)",
 ]
 filterwarnings = [
     "error",

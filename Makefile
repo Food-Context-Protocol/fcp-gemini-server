@@ -49,6 +49,12 @@ test-quick: ## Run tests without coverage for speed
 test-integration: ## Run integration tests (requires API keys)
 	uv run pytest tests/integration/ -v -m "integration"
 
+test-integration-core: ## Run backend-agnostic core integration tests (no Firestore creds required)
+	RUN_INTEGRATION=1 DATABASE_BACKEND=sqlite uv run pytest tests/integration/ -v -m "core and integration"
+
+test-integration-external: ## Run external-provider integration tests (USDA/FDA/maps/places)
+	RUN_INTEGRATION=1 RUN_EXTERNAL_INTEGRATION=1 DATABASE_BACKEND=sqlite uv run pytest tests/integration/ -v -m "external and integration"
+
 test-all: ## Run all tests (unit + integration)
 	uv run pytest tests/ -v -m "not integration or integration"
 
