@@ -71,7 +71,7 @@ dev = [
 ]
 firestore = [
     "google-cloud-firestore>=2.14.0,<3.0.0",
-    "google-cloud-storage>=2.14.0,<3.0.0",
+    "google-cloud-storage>=2.14.0,<4.0.0",
 ]
 
 [project.scripts]
