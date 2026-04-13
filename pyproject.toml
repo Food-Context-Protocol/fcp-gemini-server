@@ -67,7 +67,7 @@ dev = [
     "freezegun>=1.5.5,<2.0.0",
     "respx>=0.22.0,<1.0.0",
     "ruff>=0.1.0,<1.0.0",
-    "watchfiles>=1.0.0,<2.0.0",
+    "watchfiles>=1.1.1,<2.0.0",
 ]
 firestore = [
     "google-cloud-firestore>=2.14.0,<3.0.0",
